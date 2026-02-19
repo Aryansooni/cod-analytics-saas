@@ -1,0 +1,719 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Profile & Settings — COD Analytics</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+<style>
+:root {
+  --cream:   #F4F3EE;
+  --cream2:  #EDECEA;
+  --white:   #FFFFFF;
+  --ink:     #141414;
+  --ink2:    #2A2A2A;
+  --muted:   #6E6E6E;
+  --faint:   #A8A8A0;
+  --line:    #DDDDD6;
+  --green:   #1A7A4A;
+  --green-bg:#E8F5EE;
+  --blue:    #1B4FD8;
+  --blue-bg: #EEF2FF;
+  --red:     #B91C1C;
+  --amber:   #D97706;
+  --display: 'Syne', sans-serif;
+  --body:    'DM Sans', sans-serif;
+  --radius:  12px;
+  --radius-lg: 20px;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin:0; padding:0; }
+
+body {
+  background: var(--cream);
+  color: var(--ink);
+  font-family: var(--body);
+  font-size: 14px;
+  line-height: 1.5;
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* TOPBAR */
+.topbar {
+  background: var(--white);
+  border-bottom: 1px solid var(--line);
+  padding: 0 44px;
+  height: 58px;
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  position: sticky;
+  top: 0;
+  z-index: 200;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.brand-mark {
+  width: 28px; height: 28px;
+  background: var(--ink);
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.brand-mark svg { width:14px; height:14px; }
+
+.brand-name {
+  font-family: var(--display);
+  font-size: 15px;
+  font-weight: 800;
+  color: var(--ink);
+  letter-spacing: -.02em;
+  text-decoration: none;
+}
+
+.topbar-nav {
+  margin-left: auto;
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.nav-btn {
+  padding: 6px 14px;
+  border-radius: 100px;
+  font-size: 13px;
+  font-weight: 600;
+  text-decoration: none;
+  transition: all .15s;
+  border: 1px solid transparent;
+}
+
+.nav-btn:hover {
+  background: var(--cream);
+}
+
+.nav-btn.active {
+  background: var(--ink);
+  color: var(--white);
+}
+
+/* MAIN CONTENT */
+.page {
+  padding: 40px 44px 80px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.page-header {
+  margin-bottom: 32px;
+}
+
+.page-title {
+  font-family: var(--display);
+  font-size: 28px;
+  font-weight: 800;
+  color: var(--ink);
+  margin-bottom: 6px;
+}
+
+.page-subtitle {
+  font-size: 14px;
+  color: var(--muted);
+}
+
+/* CARDS */
+.card {
+  background: var(--white);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  padding: 32px;
+  margin-bottom: 24px;
+}
+
+.card-header {
+  margin-bottom: 24px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--line);
+}
+
+.card-title {
+  font-family: var(--display);
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--ink);
+  margin-bottom: 4px;
+}
+
+.card-subtitle {
+  font-size: 13px;
+  color: var(--muted);
+}
+
+/* FORM ELEMENTS */
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 20px;
+}
+
+.form-group {
+  margin-bottom: 20px;
+}
+
+.form-group.full-width {
+  grid-column: 1 / -1;
+}
+
+.form-label {
+  display: block;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ink);
+  margin-bottom: 8px;
+}
+
+.form-input {
+  width: 100%;
+  padding: 12px 14px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  font-family: var(--body);
+  font-size: 14px;
+  color: var(--ink);
+  background: var(--white);
+  transition: all .15s;
+}
+
+.form-input:focus {
+  outline: none;
+  border-color: var(--blue);
+  box-shadow: 0 0 0 3px var(--blue-bg);
+}
+
+.form-input:disabled {
+  background: var(--cream2);
+  color: var(--muted);
+  cursor: not-allowed;
+}
+
+/* BUTTONS */
+.btn {
+  padding: 12px 20px;
+  border-radius: 10px;
+  font-family: var(--body);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all .15s;
+  border: 1px solid var(--line);
+  background: var(--white);
+  color: var(--ink);
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.btn:hover {
+  background: var(--cream);
+}
+
+.btn-primary {
+  background: var(--ink);
+  color: var(--white);
+  border-color: var(--ink);
+}
+
+.btn-primary:hover {
+  background: var(--ink2);
+}
+
+.btn-danger {
+  background: var(--white);
+  color: var(--red);
+  border-color: var(--red);
+}
+
+.btn-danger:hover {
+  background: var(--red);
+  color: var(--white);
+}
+
+.btn-group {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+/* SUBSCRIPTION CARD */
+.sub-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: 100px;
+  font-size: 12px;
+  font-weight: 600;
+  margin-bottom: 16px;
+}
+
+.sub-badge.active {
+  background: var(--green-bg);
+  color: var(--green);
+}
+
+.sub-badge.trial {
+  background: var(--blue-bg);
+  color: var(--blue);
+}
+
+.sub-badge.expired {
+  background: #FEE2E2;
+  color: var(--red);
+}
+
+.sub-info {
+  margin-bottom: 24px;
+}
+
+.sub-price {
+  font-family: var(--display);
+  font-size: 42px;
+  font-weight: 800;
+  color: var(--ink);
+  line-height: 1;
+  margin-bottom: 8px;
+}
+
+.sub-price span {
+  font-size: 18px;
+  color: var(--muted);
+  font-weight: 600;
+}
+
+.sub-features {
+  list-style: none;
+  margin-bottom: 24px;
+}
+
+.sub-features li {
+  padding: 10px 0;
+  border-bottom: 1px solid var(--cream);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 14px;
+}
+
+.sub-features li:last-child {
+  border-bottom: none;
+}
+
+.sub-features li::before {
+  content: '✓';
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  background: var(--green-bg);
+  color: var(--green);
+  border-radius: 50%;
+  font-weight: 700;
+  font-size: 12px;
+  flex-shrink: 0;
+}
+
+/* STATS GRID */
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.stat-card {
+  background: var(--cream);
+  border-radius: var(--radius);
+  padding: 20px;
+  text-align: center;
+}
+
+.stat-value {
+  font-family: var(--display);
+  font-size: 32px;
+  font-weight: 800;
+  color: var(--ink);
+  line-height: 1;
+  margin-bottom: 6px;
+}
+
+.stat-label {
+  font-size: 12px;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: .04em;
+  font-weight: 600;
+}
+
+/* SUCCESS/ERROR MESSAGES */
+.message {
+  padding: 14px 16px;
+  border-radius: 10px;
+  margin-bottom: 20px;
+  font-size: 13px;
+  display: none;
+}
+
+.message.show { display: block; }
+
+.message-success {
+  background: var(--green-bg);
+  color: var(--green);
+  border: 1px solid #c8e6d7;
+}
+
+.message-error {
+  background: #FEE2E2;
+  color: var(--red);
+  border: 1px solid #FCA5A5;
+}
+
+/* RESPONSIVE */
+@media(max-width:860px){
+  .topbar { padding: 0 20px; }
+  .page { padding: 24px 20px 60px; }
+  .form-grid { grid-template-columns: 1fr; }
+  .stats-grid { grid-template-columns: 1fr; }
+}
+
+@media(max-width:600px){
+  .topbar { height: 50px; padding: 0 16px; }
+  .brand-name { font-size: 13px; }
+  .card { padding: 24px 20px; }
+  .sub-price { font-size: 36px; }
+}
+</style>
+</head>
+<body>
+
+<!-- TOPBAR -->
+<nav class="topbar">
+  <a href="dashboard.html" class="brand">
+    <div class="brand-mark">
+      <svg viewBox="0 0 14 14" fill="none">
+        <rect x="1" y="1" width="5" height="5" rx="1.5" fill="white"/>
+        <rect x="8" y="1" width="5" height="5" rx="1.5" fill="white" opacity=".5"/>
+        <rect x="1" y="8" width="5" height="5" rx="1.5" fill="white" opacity=".5"/>
+        <rect x="8" y="8" width="5" height="5" rx="1.5" fill="white"/>
+      </svg>
+    </div>
+    <span class="brand-name">COD Analytics</span>
+  </a>
+  
+  <div class="topbar-nav">
+    <a href="dashboard.html" class="nav-btn">Dashboard</a>
+    <a href="profile.html" class="nav-btn active">Profile</a>
+    <a href="#" class="nav-btn" onclick="logout()">Logout</a>
+  </div>
+</nav>
+
+<!-- MAIN CONTENT -->
+<div class="page">
+  <div class="page-header">
+    <h1 class="page-title">Profile & Settings</h1>
+    <p class="page-subtitle">Manage your account and subscription</p>
+  </div>
+
+  <!-- SUBSCRIPTION CARD -->
+  <div class="card">
+    <div class="card-header">
+      <h2 class="card-title">Subscription</h2>
+      <p class="card-subtitle">Your current plan and billing details</p>
+    </div>
+
+    <div class="sub-badge trial" id="subBadge">
+      🎉 7-Day Free Trial Active
+    </div>
+
+    <div class="sub-info">
+      <div class="sub-price">₹199<span>/month</span></div>
+    </div>
+
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-value" id="trialDays">7</div>
+        <div class="stat-label">Days Left</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value" id="reportsUploaded">0</div>
+        <div class="stat-label">Reports Uploaded</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value">∞</div>
+        <div class="stat-label">Unlimited Access</div>
+      </div>
+    </div>
+
+    <ul class="sub-features">
+      <li>Unlimited report uploads</li>
+      <li>Real-time delivery tracking</li>
+      <li>Historical data analysis</li>
+      <li>Hourly performance charts</li>
+      <li>Multi-hub support</li>
+      <li>WhatsApp report export</li>
+    </ul>
+
+    <div class="btn-group">
+      <button class="btn btn-primary" id="upgradeBtn" onclick="upgradePlan()">Upgrade Now</button>
+      <button class="btn" id="cancelBtn" onclick="cancelSubscription()" style="display:none;">Cancel Subscription</button>
+    </div>
+  </div>
+
+  <!-- PROFILE INFORMATION -->
+  <div class="card">
+    <div class="card-header">
+      <h2 class="card-title">Profile Information</h2>
+      <p class="card-subtitle">Update your account details</p>
+    </div>
+
+    <div class="message message-success" id="successMessage">
+      Profile updated successfully!
+    </div>
+
+    <div class="message message-error" id="errorMessage">
+      Failed to update profile. Please try again.
+    </div>
+
+    <form id="profileForm">
+      <div class="form-grid">
+        <div class="form-group">
+          <label class="form-label">Full Name</label>
+          <input type="text" class="form-input" id="userName" placeholder="John Doe" required/>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Company Name</label>
+          <input type="text" class="form-input" id="userCompany" placeholder="Your Company" required/>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Email</label>
+          <input type="email" class="form-input" id="userEmail" placeholder="you@company.com" disabled/>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Phone Number</label>
+          <input type="tel" class="form-input" id="userPhone" placeholder="+91 98765 43210"/>
+        </div>
+      </div>
+
+      <div class="btn-group">
+        <button type="submit" class="btn btn-primary">Save Changes</button>
+        <button type="button" class="btn" onclick="resetForm()">Cancel</button>
+      </div>
+    </form>
+  </div>
+
+  <!-- CHANGE PASSWORD -->
+  <div class="card">
+    <div class="card-header">
+      <h2 class="card-title">Change Password</h2>
+      <p class="card-subtitle">Update your password to keep your account secure</p>
+    </div>
+
+    <form id="passwordForm">
+      <div class="form-group">
+        <label class="form-label">Current Password</label>
+        <input type="password" class="form-input" id="currentPassword" required/>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">New Password</label>
+        <input type="password" class="form-input" id="newPassword" required/>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Confirm New Password</label>
+        <input type="password" class="form-input" id="confirmPassword" required/>
+      </div>
+
+      <button type="submit" class="btn btn-primary">Update Password</button>
+    </form>
+  </div>
+
+  <!-- DANGER ZONE -->
+  <div class="card">
+    <div class="card-header">
+      <h2 class="card-title">Danger Zone</h2>
+      <p class="card-subtitle">Irreversible actions</p>
+    </div>
+
+    <button class="btn btn-danger" onclick="deleteAccount()">Delete Account</button>
+  </div>
+</div>
+
+<script>
+// Load user data
+function loadUserData() {
+  const userData = JSON.parse(localStorage.getItem('userData') || '{}');
+  
+  document.getElementById('userName').value = userData.name || '';
+  document.getElementById('userCompany').value = userData.company || '';
+  document.getElementById('userEmail').value = userData.email || '';
+  document.getElementById('userPhone').value = userData.phone || '';
+  
+  // Update subscription badge
+  const badge = document.getElementById('subBadge');
+  const trialDays = document.getElementById('trialDays');
+  const upgradeBtn = document.getElementById('upgradeBtn');
+  const cancelBtn = document.getElementById('cancelBtn');
+  
+  if(userData.subscription === 'active' && !userData.trial) {
+    badge.className = 'sub-badge active';
+    badge.textContent = '✓ Active Subscription';
+    trialDays.textContent = '∞';
+    trialDays.nextElementSibling.textContent = 'Active';
+    upgradeBtn.style.display = 'none';
+    cancelBtn.style.display = 'inline-flex';
+  } else if(userData.trial) {
+    trialDays.textContent = userData.trialDaysLeft || 7;
+  }
+}
+
+// Profile form submission
+document.getElementById('profileForm').addEventListener('submit', async function(e) {
+  e.preventDefault();
+  
+  const successMsg = document.getElementById('successMessage');
+  const errorMsg = document.getElementById('errorMessage');
+  successMsg.classList.remove('show');
+  errorMsg.classList.remove('show');
+  
+  const name = document.getElementById('userName').value;
+  const company = document.getElementById('userCompany').value;
+  const phone = document.getElementById('userPhone').value;
+  
+  try {
+    // TODO: API call
+    const response = await fetch('/api/user/profile', {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer ' + localStorage.getItem('authToken')
+      },
+      body: JSON.stringify({ name, company, phone })
+    });
+    
+    if(response.ok) {
+      const userData = JSON.parse(localStorage.getItem('userData'));
+      userData.name = name;
+      userData.company = company;
+      userData.phone = phone;
+      localStorage.setItem('userData', JSON.stringify(userData));
+      successMsg.classList.add('show');
+      setTimeout(() => successMsg.classList.remove('show'), 3000);
+    } else {
+      errorMsg.classList.add('show');
+    }
+  } catch(error) {
+    // Demo mode - just save to localStorage
+    const userData = JSON.parse(localStorage.getItem('userData'));
+    userData.name = name;
+    userData.company = company;
+    userData.phone = phone;
+    localStorage.setItem('userData', JSON.stringify(userData));
+    successMsg.classList.add('show');
+    setTimeout(() => successMsg.classList.remove('show'), 3000);
+  }
+});
+
+// Password form submission
+document.getElementById('passwordForm').addEventListener('submit', async function(e) {
+  e.preventDefault();
+  
+  const current = document.getElementById('currentPassword').value;
+  const newPass = document.getElementById('newPassword').value;
+  const confirm = document.getElementById('confirmPassword').value;
+  
+  if(newPass !== confirm) {
+    alert('New passwords do not match!');
+    return;
+  }
+  
+  try {
+    // TODO: API call
+    const response = await fetch('/api/user/password', {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer ' + localStorage.getItem('authToken')
+      },
+      body: JSON.stringify({ currentPassword: current, newPassword: newPass })
+    });
+    
+    if(response.ok) {
+      alert('Password updated successfully!');
+      this.reset();
+    } else {
+      alert('Failed to update password. Please check your current password.');
+    }
+  } catch(error) {
+    // Demo mode
+    alert('Password updated successfully!');
+    this.reset();
+  }
+});
+
+function resetForm() {
+  loadUserData();
+}
+
+function upgradePlan() {
+  if(confirm('Upgrade to paid plan for ₹199/month?')) {
+    const userData = JSON.parse(localStorage.getItem('userData'));
+    userData.subscription = 'active';
+    userData.trial = false;
+    localStorage.setItem('userData', JSON.stringify(userData));
+    location.reload();
+  }
+}
+
+function cancelSubscription() {
+  if(confirm('Are you sure you want to cancel your subscription?')) {
+    const userData = JSON.parse(localStorage.getItem('userData'));
+    userData.subscription = 'cancelled';
+    localStorage.setItem('userData', JSON.stringify(userData));
+    alert('Subscription cancelled. You can continue using until the end of your billing period.');
+    location.reload();
+  }
+}
+
+function deleteAccount() {
+  const confirmed = prompt('Type "DELETE" to confirm account deletion:');
+  if(confirmed === 'DELETE') {
+    localStorage.clear();
+    window.location.href = 'login.html';
+  }
+}
+
+function logout() {
+  if(confirm('Are you sure you want to logout?')) {
+    localStorage.clear();
+    window.location.href = 'login.html';
+  }
+}
+
+// Load data on page load
+loadUserData();
+</script>
+
+</body>
+</html>
