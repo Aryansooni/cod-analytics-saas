@@ -207,7 +207,7 @@ app.get('/api/admin/stats', auth, async (req, res) => {
   try {
 
     // ✅ CHANGE THIS TO YOUR EMAIL
-    if (req.user.email !== "contactpripanda@gmail.com") {
+    if (req.user.email !== "aryan100nizz@gmail.com") {
       return res.status(403).json({ message: "Access denied" });
     }
 
