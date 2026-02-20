@@ -150,6 +150,32 @@ app.put('/api/user/profile', auth, async (req, res) => {
     res.status(500).json({ message: 'Error' });
   }
 });
+app.put('/api/user/password', auth, async (req, res) => {
+  try {
+    const { currentPassword, newPassword } = req.body;
+
+    if (!currentPassword || !newPassword) {
+      return res.status(400).json({ message: 'Missing fields' });
+    }
+
+    const user = await User.findById(req.user.userId);
+    if (!user) return res.status(404).json({ message: 'User not found' });
+
+    const valid = await bcrypt.compare(currentPassword, user.password);
+    if (!valid) {
+      return res.status(401).json({ message: 'Current password incorrect' });
+    }
+
+    const hashed = await bcrypt.hash(newPassword, 10);
+    user.password = hashed;
+    await user.save();
+
+    res.json({ message: 'Password updated successfully' });
+
+  } catch (error) {
+    res.status(500).json({ message: 'Error updating password' });
+  }
+});
 
 // SAVE REPORT
 app.post('/api/reports/save', auth, async (req, res) => {
