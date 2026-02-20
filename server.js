@@ -203,7 +203,32 @@ app.get('/api/reports/history', auth, async (req, res) => {
     res.status(500).json({ message: 'Error' });
   }
 });
+app.get('/api/admin/stats', auth, async (req, res) => {
+  try {
 
+    // ✅ CHANGE THIS TO YOUR EMAIL
+    if (req.user.email !== "contactpripanda.com") {
+      return res.status(403).json({ message: "Access denied" });
+    }
+
+    const totalUsers = await User.countDocuments();
+    const trialUsers = await User.countDocuments({ "subscription.status": "trial" });
+    const activeUsers = await User.countDocuments({ "subscription.status": "active" });
+    const cancelledUsers = await User.countDocuments({ "subscription.status": "cancelled" });
+    const expiredUsers = await User.countDocuments({ "subscription.status": "expired" });
+
+    res.json({
+      totalUsers,
+      trialUsers,
+      activeUsers,
+      cancelledUsers,
+      expiredUsers
+    });
+
+  } catch (error) {
+    res.status(500).json({ message: "Error fetching stats" });
+  }
+});
 // SERVE FILES
 app.get('/', (req, res) => res.sendFile('login.html', { root: __dirname }));
 app.get('/login.html', (req, res) => res.sendFile('login.html', { root: __dirname }));
