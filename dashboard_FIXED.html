@@ -1,0 +1,1497 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>COD Performance — Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=Clash+Display:wght@400;500;600;700&family=Cabinet+Grotesk:wght@400;500;700;800&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Manrope:wght@300;400;500;600;700;800&display=swap" rel="stylesheet"/>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<script>
+// Authentication check
+(function checkAuth() {
+  const token = localStorage.getItem('authToken');
+  const userData = JSON.parse(localStorage.getItem('userData') || '{}');
+  
+  if (!token) {
+    window.location.href = 'login.html';
+    return;
+  }
+  
+  if (userData.subscription === 'expired') {
+    alert('Your subscription has expired. Please upgrade to continue.');
+    window.location.href = 'profile.html';
+    return;
+  }
+  
+  console.log('Logged in as:', userData.name || userData.email);
+})();
+
+function logout() {
+  if(confirm('Are you sure you want to logout?')) {
+    localStorage.clear();
+    window.location.href = 'login.html';
+  }
+}
+
+// Show user's first name
+(function displayUserName() {
+  const userData = JSON.parse(localStorage.getItem('userData') || '{}');
+  const nameEl = document.getElementById('userName');
+  if (nameEl && userData.name) {
+    const firstName = userData.name.split(' ')[0];
+    nameEl.textContent = firstName;
+  }
+})();
+</script>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,300&display=swap');
+
+:root {
+  --cream:   #F4F3EE;
+  --cream2:  #EDECEA;
+  --cream3:  #E5E4DF;
+  --white:   #FFFFFF;
+  --ink:     #141414;
+  --ink2:    #2A2A2A;
+  --muted:   #6E6E6E;
+  --faint:   #A8A8A0;
+  --line:    #DDDDD6;
+  --green:   #1A7A4A;
+  --green-bg:#E8F5EE;
+  --amber:   #92580A;
+  --amber-bg:#FEF3DC;
+  --red:     #B91C1C;
+  --red-bg:  #FEE2E2;
+  --blue:    #1B4FD8;
+  --blue-bg: #EEF2FF;
+  --orange:  #C2410C;
+  --orange-bg:#FFF0E8;
+  --purple:  #6D28D9;
+  --purple-bg:#F5F0FF;
+  --display: 'Syne', sans-serif;
+  --body:    'DM Sans', sans-serif;
+  --radius:  12px;
+  --radius-lg: 20px;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin:0; padding:0; }
+html { scroll-behavior: smooth; }
+body {
+  background: var(--cream);
+  color: var(--ink);
+  font-family: var(--body);
+  font-size: 14px;
+  line-height: 1.5;
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+}
+
+.topbar {
+  background: var(--white);
+  border-bottom: 1px solid var(--line);
+  padding: 0 44px;
+  height: 58px;
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  position: sticky;
+  top: 0;
+  z-index: 200;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.brand-mark {
+  width: 28px; height: 28px;
+  background: var(--ink);
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.brand-mark svg { width:14px; height:14px; }
+.brand-name {
+  font-family: var(--display);
+  font-size: 15px;
+  font-weight: 800;
+  color: var(--ink);
+  letter-spacing: -.02em;
+}
+
+.tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background: var(--cream);
+  border: 1px solid var(--line);
+  border-radius: 100px;
+  padding: 4px 12px;
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--muted);
+  letter-spacing: .01em;
+}
+.tag .dot {
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: var(--green);
+  flex-shrink: 0;
+}
+
+.ts-bar { margin-left: auto; display:flex; gap:6px; align-items:center; }
+.ts-chip {
+  background: var(--cream2);
+  border-radius: 100px;
+  padding: 4px 12px;
+  font-size: 10px;
+  font-weight: 500;
+  color: var(--faint);
+}
+.ts-chip b { color: var(--muted); font-weight: 600; }
+
+.upbar {
+  background: var(--cream2);
+  border-bottom: 1px solid var(--line);
+  padding: 10px 44px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.up-label {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  color: var(--faint);
+}
+label.ubtn {
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  background: var(--white);
+  border: 1px solid var(--line);
+  border-radius: 100px;
+  padding: 6px 16px;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--ink2);
+  transition: border-color .15s, box-shadow .15s;
+}
+label.ubtn:hover { border-color: var(--ink); box-shadow: 0 1px 4px rgba(0,0,0,.07); }
+label.ubtn .upload-icon { font-size: 13px; }
+label.ubtn input { display: none; }
+.uinfo { font-size: 11px; color: var(--faint); }
+.uinfo.ok { color: var(--green); font-weight: 500; }
+
+.page { padding: 40px 44px 80px; max-width: 1400px; }
+
+.section-header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  padding-bottom: 18px;
+  border-bottom: 1px solid var(--line);
+  margin-bottom: 28px;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+.section-header h2 {
+  font-family: var(--display);
+  font-size: 24px;
+  font-weight: 800;
+  color: var(--ink);
+  letter-spacing: -.03em;
+}
+.section-header .sh-meta {
+  font-size: 12px;
+  color: var(--faint);
+}
+.section-tag {
+  background: var(--ink);
+  color: var(--white);
+  border-radius: 100px;
+  padding: 4px 14px;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+}
+
+.target-block {
+  background: var(--ink);
+  border-radius: var(--radius-lg);
+  padding: 32px 36px;
+  color: var(--white);
+  margin-bottom: 20px;
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 24px 40px;
+  align-items: center;
+}
+.target-block .tl-label {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  color: rgba(255,255,255,.35);
+  margin-bottom: 8px;
+}
+.target-block .tl-meta {
+  font-size: 13px;
+  color: rgba(255,255,255,.5);
+  margin-top: 5px;
+}
+.target-block .tl-meta b { color: rgba(255,255,255,.85); font-weight: 600; }
+
+.target-pct-wrap { text-align: right; }
+.target-pct {
+  font-family: var(--display);
+  font-size: 56px;
+  font-weight: 800;
+  letter-spacing: -.04em;
+  line-height: 1;
+  color: var(--white);
+}
+.target-pct-sub {
+  font-size: 12px;
+  color: #F97316;
+  font-weight: 600;
+  margin-top: 4px;
+}
+.target-pct-sub.ok { color: #4ADE80; }
+
+.progress-wrap { grid-column: 1/-1; }
+.progress-meta {
+  display: flex;
+  justify-content: space-between;
+  font-size: 11px;
+  color: rgba(255,255,255,.35);
+  margin-bottom: 10px;
+}
+.progress-meta span:last-child { color: rgba(255,255,255,.5); }
+.progress-track {
+  background: rgba(255,255,255,.1);
+  border-radius: 100px;
+  height: 10px;
+  position: relative;
+  overflow: visible;
+}
+.progress-fill {
+  height: 10px;
+  border-radius: 100px;
+  background: linear-gradient(90deg, #F97316 0%, #FBBF24 100%);
+  position: relative;
+  transition: width 1s cubic-bezier(.4,0,.2,1);
+}
+.progress-fill::after {
+  content: '';
+  position: absolute;
+  right: -5px; top: 50%;
+  transform: translateY(-50%);
+  width: 18px; height: 18px;
+  background: var(--white);
+  border-radius: 50%;
+  border: 3px solid #F97316;
+}
+.tgt-marker {
+  position: absolute;
+  top: -3px; bottom: -3px;
+  width: 2px;
+  background: rgba(255,255,255,.3);
+  border-radius: 2px;
+}
+.tgt-marker-label {
+  position: absolute;
+  bottom: calc(100% + 6px);
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 9px;
+  color: rgba(255,255,255,.4);
+  white-space: nowrap;
+  font-weight: 600;
+  letter-spacing: .04em;
+}
+
+.kpi-grid { display: grid; grid-template-columns: repeat(auto-fit,minmax(172px,1fr)); gap: 12px; }
+.kpi-card {
+  background: var(--white);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 22px 20px 18px;
+  position: relative;
+  overflow: hidden;
+  transition: box-shadow .2s, transform .15s;
+}
+.kpi-card:hover { box-shadow: 0 4px 20px rgba(0,0,0,.06); transform: translateY(-1px); }
+.kpi-notch {
+  position: absolute;
+  top: 0; left: 24px;
+  width: 32px; height: 3px;
+  border-radius: 0 0 4px 4px;
+}
+.kc-grn .kpi-notch { background: var(--green); }
+.kc-amb .kpi-notch { background: #D97706; }
+.kc-red .kpi-notch { background: var(--red); }
+.kc-blu .kpi-notch { background: var(--blue); }
+.kc-org .kpi-notch { background: var(--orange); }
+.kc-pur .kpi-notch { background: var(--purple); }
+
+.kpi-label {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .09em;
+  color: var(--faint);
+  margin-bottom: 12px;
+}
+.kpi-value {
+  font-family: var(--display);
+  font-size: 38px;
+  font-weight: 800;
+  letter-spacing: -.03em;
+  line-height: 1;
+  color: var(--ink);
+  margin-bottom: 6px;
+}
+.kc-grn .kpi-value { color: var(--green); }
+.kc-amb .kpi-value { color: var(--amber); }
+.kc-red .kpi-value { color: var(--red); }
+.kc-blu .kpi-value { color: var(--blue); }
+.kc-org .kpi-value { color: var(--orange); }
+.kc-pur .kpi-value { color: var(--purple); }
+.kpi-sub { font-size: 11px; color: var(--faint); }
+
+.history-dropdown-wrapper {
+  position: relative;
+  margin-left: auto;
+}
+
+.history-dropdown-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--cream);
+  border: 1px solid var(--line);
+  border-radius: 100px;
+  padding: 6px 12px;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--ink);
+  cursor: pointer;
+  transition: all .15s;
+  user-select: none;
+}
+.history-dropdown-btn:hover {
+  background: var(--white);
+  border-color: var(--ink);
+}
+.history-dropdown-btn.active {
+  background: var(--ink);
+  color: var(--white);
+  border-color: var(--ink);
+}
+
+.history-dropdown-menu {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  width: 340px;
+  max-height: 420px;
+  overflow-y: auto;
+  background: var(--white);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  box-shadow: 0 8px 24px rgba(0,0,0,.12);
+  z-index: 300;
+  display: none;
+  padding: 12px;
+}
+.history-dropdown-menu.show { display: block; }
+.history-dropdown-menu::-webkit-scrollbar { width: 6px; }
+.history-dropdown-menu::-webkit-scrollbar-track { background: var(--cream2); }
+.history-dropdown-menu::-webkit-scrollbar-thumb { background: var(--line); border-radius: 3px; }
+
+.history-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  background: var(--cream);
+  border: 1px solid transparent;
+  border-radius: 8px;
+  margin-bottom: 6px;
+  cursor: pointer;
+  transition: all .15s;
+}
+.history-item:last-child { margin-bottom: 0; }
+.history-item:hover {
+  background: var(--white);
+  border-color: var(--ink);
+}
+.history-item.selected {
+  background: var(--blue-bg);
+  border-color: var(--blue);
+}
+
+.history-checkbox {
+  width: 16px;
+  height: 16px;
+  border: 2px solid var(--line);
+  border-radius: 3px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: all .15s;
+}
+.history-item.selected .history-checkbox {
+  background: var(--blue);
+  border-color: var(--blue);
+}
+.history-checkbox::after {
+  content: '✓';
+  color: var(--white);
+  font-size: 11px;
+  font-weight: 700;
+  display: none;
+}
+.history-item.selected .history-checkbox::after { display: block; }
+
+.history-item-content {
+  flex: 1;
+  min-width: 0;
+}
+.history-item-date {
+  font-weight: 600;
+  font-size: 12px;
+  color: var(--ink);
+  margin-bottom: 2px;
+}
+.history-item-stats {
+  font-size: 10px;
+  color: var(--muted);
+}
+.history-item-del {
+  color: var(--green);
+  font-weight: 700;
+  font-size: 11px;
+  white-space: nowrap;
+}
+
+.history-actions {
+  display: flex;
+  gap: 6px;
+  padding: 8px 12px 4px;
+  border-top: 1px solid var(--line);
+  margin-top: 8px;
+}
+.history-btn {
+  flex: 1;
+  padding: 6px 12px;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all .15s;
+  border: 1px solid var(--line);
+  background: var(--white);
+  color: var(--ink);
+  text-align: center;
+}
+.history-btn:hover {
+  background: var(--cream);
+}
+.history-btn.primary {
+  background: var(--ink);
+  color: var(--white);
+  border-color: var(--ink);
+}
+.history-btn.primary:hover {
+  background: var(--ink2);
+}
+
+.history-empty {
+  text-align: center;
+  padding: 32px 20px;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.chart-container {
+  background: var(--white);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  padding: 32px 28px 28px;
+  margin-bottom: 24px;
+}
+.chart-container canvas {
+  max-height: 320px;
+}
+
+.dl-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: 22px;
+  background: var(--ink);
+  color: var(--white);
+  border: none;
+  border-radius: 50%;
+  width: 46px;
+  height: 46px;
+  padding: 0;
+  cursor: pointer;
+  transition: background .15s, box-shadow .15s, transform .1s;
+  flex-shrink: 0;
+}
+.dl-btn:hover { background: var(--ink2); box-shadow: 0 4px 18px rgba(0,0,0,.22); transform: translateY(-1px) scale(1.05); }
+.dl-btn svg { width: 18px; height: 18px; }
+.dl-btn-text { display: none; }
+
+.table-wrap {
+  background: var(--white);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+}
+.table-wrap table { width: 100%; border-collapse: collapse; font-size: 13px; }
+.table-wrap thead tr {
+  background: var(--cream);
+  border-bottom: 1px solid var(--line);
+}
+.table-wrap thead th {
+  padding: 13px 16px;
+  text-align: center;
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .08em;
+  color: var(--faint);
+  white-space: nowrap;
+}
+.table-wrap thead th:first-child { text-align: left; padding-left: 24px; }
+.table-wrap tbody tr { border-bottom: 1px solid var(--cream2); transition: background .1s; }
+.table-wrap tbody tr:last-child { border-bottom: none; }
+.table-wrap tbody tr:hover { background: var(--cream); }
+.table-wrap td {
+  padding: 14px 16px;
+  text-align: center;
+  color: var(--ink2);
+  white-space: nowrap;
+}
+.table-wrap td:first-child { text-align: left; padding-left: 24px; }
+td.td-name { font-weight: 600; color: var(--ink); }
+td.td-num { font-family: var(--display); font-weight: 700; font-size: 15px; }
+
+.chip {
+  display: inline-block;
+  padding: 3px 11px;
+  border-radius: 100px;
+  font-size: 11px;
+  font-weight: 600;
+}
+.chip-grn { background: var(--green-bg); color: var(--green); }
+.chip-amb { background: var(--amber-bg); color: var(--amber); }
+.chip-red { background: var(--red-bg); color: var(--red); }
+.chip-blu { background: var(--blue-bg); color: var(--blue); }
+.chip-org { background: var(--orange-bg); color: var(--orange); }
+.chip-pur { background: var(--purple-bg); color: var(--purple); }
+
+.mini-bar { width: 100%; background: var(--cream2); border-radius: 100px; height: 5px; margin-top: 4px; overflow: hidden; }
+.mini-bar-fill { height: 5px; border-radius: 100px; }
+
+.empty-state {
+  background: var(--white);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  padding: 48px 32px;
+  text-align: center;
+}
+.empty-state .es-icon { font-size: 28px; margin-bottom: 12px; }
+.empty-state p { font-size: 14px; color: var(--muted); }
+.empty-state p b { color: var(--ink); }
+
+#snapCard {
+  position: fixed; top: 0; left: 0;
+  opacity: 0; pointer-events: none; z-index: -1;
+  background: var(--cream);
+  width: 620px;
+  font-family: var(--body);
+  padding: 28px 28px 22px;
+}
+#snapCard .sn-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding-bottom: 16px; border-bottom: 1px solid #DDDDD6; margin-bottom: 18px;
+}
+#snapCard .sn-brand { display:flex; align-items:center; gap:8px; }
+#snapCard .sn-brand .sn-mark {
+  width:26px; height:26px; background:#141414; border-radius:6px;
+  display:flex; align-items:center; justify-content:center;
+  font-size:12px; color:#fff; font-weight:900; font-family:sans-serif;
+}
+#snapCard .sn-brand h2 { font-size:15px; font-weight:900; color:#141414; letter-spacing:-.02em; font-family:var(--display); }
+#snapCard .sn-meta { font-size:9px; color:#A8A8A0; letter-spacing:.04em; text-transform:uppercase; }
+#snapCard .sn-tgt {
+  background:#141414; border-radius:14px; padding:20px 22px; margin-bottom:14px; color:#fff;
+  display:flex; flex-direction:column; gap:12px;
+}
+#snapCard .sn-tgt-top { display:flex; justify-content:space-between; align-items:flex-start; }
+#snapCard .sn-tgt-label { font-size:9px; font-weight:700; text-transform:uppercase; letter-spacing:.08em; color:rgba(255,255,255,.35); margin-bottom:5px; }
+#snapCard .sn-tgt-meta { font-size:11px; color:rgba(255,255,255,.5); }
+#snapCard .sn-tgt-meta b { color:rgba(255,255,255,.8); }
+#snapCard .sn-pct { font-size:40px; font-weight:900; color:#fff; letter-spacing:-.04em; line-height:1; text-align:right; font-family:var(--display); }
+#snapCard .sn-pct-sub { font-size:10px; color:#F97316; font-weight:700; text-align:right; margin-top:2px; }
+#snapCard .sn-pct-sub.ok { color:#4ADE80; }
+#snapCard .sn-bar-wrap { position:relative; }
+#snapCard .sn-bar-track { background:rgba(255,255,255,.1); border-radius:100px; height:8px; overflow:hidden; position:relative; }
+#snapCard .sn-bar-fill { height:8px; border-radius:100px; background:linear-gradient(90deg,#F97316,#FBBF24); }
+#snapCard .sn-bar-marker { position:absolute; top:-2px; bottom:-2px; width:2px; background:rgba(255,255,255,.3); }
+#snapCard .sn-bar-marker-lbl { position:absolute; bottom:calc(100%+5px); left:50%; transform:translateX(-50%); font-size:7px; color:rgba(255,255,255,.35); white-space:nowrap; font-weight:700; letter-spacing:.05em; }
+#snapCard .sn-kpi { display:grid; grid-template-columns:repeat(3,1fr); gap:7px; margin-bottom:12px; }
+#snapCard .sn-kpi-card {
+  background:#fff; border:1px solid #DDDDD6; border-radius:10px;
+  padding:12px 10px 10px; position:relative; overflow:hidden;
+}
+#snapCard .sn-notch { position:absolute; top:0; left:18px; width:24px; height:2.5px; border-radius:0 0 3px 3px; }
+#snapCard .sn-kpi-card.kgrn .sn-notch{background:#1A7A4A;} #snapCard .sn-kpi-card.kamb .sn-notch{background:#D97706;}
+#snapCard .sn-kpi-card.kred .sn-notch{background:#B91C1C;} #snapCard .sn-kpi-card.kblu .sn-notch{background:#1B4FD8;}
+#snapCard .sn-kpi-card.korg .sn-notch{background:#C2410C;} #snapCard .sn-kpi-card.kpur .sn-notch{background:#6D28D9;}
+#snapCard .sn-klbl { font-size:8px; font-weight:700; text-transform:uppercase; letter-spacing:.07em; color:#A8A8A0; margin-bottom:5px; }
+#snapCard .sn-kval { font-size:22px; font-weight:900; line-height:1; margin-bottom:2px; letter-spacing:-.02em; font-family:var(--display); }
+#snapCard .sn-kpi-card.kgrn .sn-kval{color:#1A7A4A;} #snapCard .sn-kpi-card.kamb .sn-kval{color:#92580A;}
+#snapCard .sn-kpi-card.kred .sn-kval{color:#B91C1C;} #snapCard .sn-kpi-card.kblu .sn-kval{color:#1B4FD8;}
+#snapCard .sn-kpi-card.korg .sn-kval{color:#C2410C;} #snapCard .sn-kpi-card.kpur .sn-kval{color:#6D28D9;}
+#snapCard .sn-ksub { font-size:8.5px; color:#A8A8A0; }
+#snapCard .sn-tbl { width:100%; border-collapse:collapse; font-size:9.5px; }
+#snapCard .sn-tbl thead tr { background:#F4F3EE; }
+#snapCard .sn-tbl th { padding:6px 5px; font-size:7.5px; font-weight:800; text-transform:uppercase; letter-spacing:.06em; color:#A8A8A0; border-bottom:1px solid #DDDDD6; text-align:center; }
+#snapCard .sn-tbl th:first-child { text-align:left; padding-left:10px; }
+#snapCard .sn-tbl td { padding:5.5px 5px; border-bottom:1px solid #F4F3EE; color:#2A2A2A; font-weight:600; text-align:center; }
+#snapCard .sn-tbl td:first-child { text-align:left; padding-left:10px; font-weight:700; color:#141414; }
+#snapCard .sn-tbl tbody tr:nth-child(even) { background:rgba(0,0,0,.015); }
+#snapCard .sn-tbl tr:last-child td { border-bottom:none; }
+#snapCard .sn-chip { display:inline-block; padding:2px 7px; border-radius:20px; font-size:8px; font-weight:800; }
+#snapCard .sc-grn{background:#E8F5EE;color:#1A7A4A;} #snapCard .sc-amb{background:#FEF3DC;color:#92580A;} #snapCard .sc-red{background:#FEE2E2;color:#B91C1C;}
+#snapCard .sn-footer { text-align:center; margin-top:12px; font-size:8px; color:#A8A8A0; letter-spacing:.05em; text-transform:uppercase; padding-top:10px; border-top:1px solid #EDECEA; }
+
+.nav-btn {
+  padding: 7px 14px;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 600;
+  text-decoration: none;
+  color: var(--ink);
+  background: var(--cream);
+  border: 1px solid var(--line);
+  transition: all .2s;
+  display: inline-flex;
+  align-items: center;
+}
+.nav-btn:hover {
+  background: var(--white);
+  border-color: var(--ink);
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(0,0,0,.08);
+}
+.nav-btn-logout {
+  background: var(--red-bg);
+  color: var(--red);
+  border-color: #fca5a5;
+}
+.nav-btn-logout:hover {
+  background: var(--red);
+  color: var(--white);
+  border-color: var(--red);
+}
+
+.table-scroll {
+  width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+.table-scroll::-webkit-scrollbar { height: 4px; }
+.table-scroll::-webkit-scrollbar-track { background: var(--cream2); }
+.table-scroll::-webkit-scrollbar-thumb { background: var(--line); border-radius: 2px; }
+.table-scroll table { min-width: 560px; }
+
+@media(max-width:700px){
+  .table-scroll td:first-child,
+  .table-scroll th:first-child {
+    position: sticky;
+    left: 0;
+    background: inherit;
+    z-index: 2;
+  }
+  .table-scroll thead th:first-child { background: var(--cream); }
+  .table-scroll tbody tr:nth-child(even) td:first-child { background: var(--cream2); }
+  .table-scroll tbody tr:nth-child(odd) td:first-child { background: var(--white); }
+  .table-scroll tbody tr:hover td:first-child { background: var(--cream); }
+}
+
+@media(max-width:860px){
+  .topbar { padding: 0 20px; gap: 10px; height: 52px; }
+  .tag { display: none; }
+  .upbar { padding: 10px 20px; gap: 8px; }
+  .page { padding: 24px 20px 60px; }
+  .section-header h2 { font-size: 19px; }
+  .target-block { padding: 22px 22px; }
+  .target-pct { font-size: 44px; }
+  .kpi-grid { grid-template-columns: repeat(3, 1fr); gap: 8px; }
+  .kpi-value { font-size: 28px; }
+  .kpi-card { padding: 16px 14px 12px; }
+  .history-dropdown-menu { width: 300px; }
+}
+
+@media(max-width:380px){
+  .ts-bar { display: none; }
+  .topbar { justify-content: flex-start; }
+  label.ubtn { font-size: 10px; padding: 6px 10px; }
+}
+
+@media(max-width:600px){
+  .topbar { 
+    padding: 0 12px; 
+    gap: 8px; 
+    height: auto;
+    min-height: 50px;
+    flex-wrap: wrap;
+  }
+  .brand-name { font-size: 12px; }
+  .ts-chip { font-size: 9px; padding: 3px 8px; }
+  .tag { display: none; }
+  
+  #userName { font-size: 11px; }
+  .nav-btn { 
+    padding: 5px 10px; 
+    font-size: 11px;
+    border-radius: 6px;
+  }
+  
+  .ts-bar {
+    order: 3;
+    width: 100%;
+    justify-content: center;
+    padding-top: 6px;
+  }
+  
+  .history-dropdown-wrapper { position: static; }
+  .history-dropdown-menu { 
+    position: fixed;
+    top: 60px;
+    left: 0;
+    right: 0;
+    width: 100%;
+    max-height: calc(100vh - 60px);
+    border-radius: 0;
+  }
+
+  .upbar { 
+    padding: 10px 12px; 
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .up-label { margin-bottom: 0; }
+  .uinfo { font-size: 10px; }
+  label.ubtn { 
+    width: 100%;
+    justify-content: center; 
+    font-size: 11px; 
+    padding: 10px 12px; 
+  }
+
+  .page { padding: 18px 16px 60px; }
+  .section-header { padding-bottom: 12px; margin-bottom: 18px; }
+  .section-header h2 { font-size: 17px; }
+  .sh-meta { font-size: 10px; }
+
+  .target-block {
+    grid-template-columns: 1fr;
+    gap: 14px;
+    padding: 18px 18px;
+    border-radius: 14px;
+    margin-bottom: 14px;
+  }
+  .target-pct-wrap { text-align: left; }
+  .target-pct { font-size: 40px; }
+  .target-pct-sub { text-align: left; }
+  .progress-meta { font-size: 9px; }
+  .tl-meta { font-size: 11px; }
+
+  .kpi-grid { grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 16px !important; }
+  .kpi-card { padding: 14px 12px 10px; border-radius: 10px; }
+  .kpi-value { font-size: 26px; }
+  .kpi-label { font-size: 9px; margin-bottom: 8px; }
+  .kpi-sub { font-size: 10px; }
+  .kpi-notch { left: 14px; width: 24px; }
+
+  .dl-btn { padding: 11px 16px; margin-top: 14px; }
+  .dl-btn-text { display: none; }
+  .dl-btn svg { width: 18px; height: 18px; }
+
+  .table-wrap { border-radius: 12px; }
+  .table-wrap table { font-size: 11px; }
+  .table-wrap thead th { font-size: 8px; padding: 10px 8px; letter-spacing: .04em; }
+  .table-wrap td { padding: 10px 8px; font-size: 11px; }
+  .table-wrap td:first-child { padding-left: 14px; }
+  .table-wrap thead th:first-child { padding-left: 14px; }
+  td.td-num { font-size: 12px; }
+  .chip { font-size: 10px; padding: 2px 8px; }
+}
+</style>
+</head>
+<body>
+
+<nav class="topbar">
+  <div class="brand">
+    <div class="brand-mark">
+      <svg viewBox="0 0 14 14" fill="none">
+        <rect x="1" y="1" width="5" height="5" rx="1.5" fill="white"/>
+        <rect x="8" y="1" width="5" height="5" rx="1.5" fill="white" opacity=".5"/>
+        <rect x="1" y="8" width="5" height="5" rx="1.5" fill="white" opacity=".5"/>
+        <rect x="8" y="8" width="5" height="5" rx="1.5" fill="white"/>
+      </svg>
+    </div>
+    <span class="brand-name">COD Dashboard</span>
+  </div>
+  <div class="tag"><span class="dot"></span>COD · Attempt 0 &amp; 1</div>
+  <div class="ts-bar">
+    <div class="ts-chip">R1: <b id="r1t">—</b></div>
+  </div>
+  
+  <div style="margin-left:auto;display:flex;align-items:center;gap:10px;">
+    <span id="userName" style="font-size:13px;font-weight:600;color:var(--ink);">User</span>
+    <a href="profile.html" class="nav-btn">Profile</a>
+    <a href="#" onclick="logout();return false;" class="nav-btn nav-btn-logout">Logout</a>
+  </div>
+  
+  <div class="history-dropdown-wrapper">
+    <div class="history-dropdown-btn" id="historyBtn" onclick="toggleHistoryDropdown()">
+      📅 Past Data
+    </div>
+    <div class="history-dropdown-menu" id="historyMenu">
+      <div id="historyList"></div>
+      <div class="history-actions">
+        <button class="history-btn" onclick="clearSelection()">Clear</button>
+        <button class="history-btn primary" onclick="loadSelectedHistory()">Load Selected</button>
+      </div>
+    </div>
+  </div>
+</nav>
+
+<div class="upbar">
+  <span class="up-label">Upload</span>
+  <label class="ubtn">
+    <span class="upload-icon">&#8593;</span> Report 1
+    <input type="file" accept=".xlsx,.xls" onchange="loadFile(this,1)"/>
+  </label>
+  <span class="uinfo" id="i1">Pre-loaded from today's report</span>
+</div>
+
+<div class="page" id="main"></div>
+<div id="snapCard"></div>
+
+<script>
+var r1=null, r2=null, TGT=76;
+
+function parseFname(n){
+  var m=n.match(/(\d{4}-\d{2}-\d{2}T\d{2}[_:]\d{2}[_:]\d{2})/);
+  return m?m[1].replace(/_/g,':'):'Unknown';
+}
+
+async function saveToServer(ts, codData, allData) {
+  const token = localStorage.getItem('authToken');
+  try {
+    await fetch(window.location.origin + '/api/reports/save', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer ' + token
+      },
+      body: JSON.stringify({
+        timestamp: ts,
+        codData: codData,
+        allData: allData || {},
+        hubName: codData.hubName || ''
+      })
+    });
+    console.log('✅ Saved to server');
+  } catch (e) {
+    console.log('⚠️ Server save failed, using localStorage');
+  }
+}
+
+function loadFile(el,num){
+  var f=el.files[0]; if(!f)return;
+  var rd=new FileReader();
+  rd.onload=function(e){
+    try{
+      var wb=XLSX.read(e.target.result,{type:'binary',cellDates:true});
+      var ws=wb.Sheets[wb.SheetNames[0]];
+      var raw=XLSX.utils.sheet_to_json(ws,{defval:''});
+      var d=proc(raw),dAll=procAll(raw),ts=parseFname(f.name);
+      
+      if(num===1){
+        r1={data:d,dataAll:dAll,ts:ts,raw:raw};
+        saveToServer(ts, d, dAll);
+        document.getElementById('r1t').textContent=ts;
+        document.getElementById('i1').textContent='\u2713 '+f.name;
+        document.getElementById('i1').className='uinfo ok';
+        saveToHistory(ts,d,dAll);
+      }
+      draw();
+    }catch(err){alert('Error: '+err.message);}
+  };
+  rd.readAsBinaryString(f);
+}
+
+function proc(raw){
+  var cod=raw.filter(function(r){return String(r['payment_type']||'').trim().toUpperCase()==='COD';});
+  var rows=cod.filter(function(r){var a=parseInt(r['total_attemps']);return a===0||a===1;});
+  var total=rows.length,delivered=0,onRoad=0,undel=0,attempted=0,otpCancel=0;
+  var empMap={};
+
+  var hubName='';
+  for(var ri=0;ri<rows.length;ri++){
+    var loc=String(rows[ri]['LOCATION']||rows[ri]['location']||'').trim();
+    if(loc.length>=3){hubName=loc.slice(-3).toUpperCase();break;}
+  }
+  rows.forEach(function(r){
+    var st=String(r['shipment_status']||'').trim().toUpperCase();
+    var otp=String(r['otp_details']||'').trim();
+    var emp=String(r['Employee_name']||'Unknown').trim();
+    if(!empMap[emp])empMap[emp]={total:0,del:0,onRoad:0,undel:0,otpCancel:0,attempted:0,drsTime:null,lastPOD:null,speedHr:0,hrsWorked:0};
+    empMap[emp].total++;
+    if(st==='DEL'){
+      delivered++;empMap[emp].del++;
+      var pod=r['POD_date']?new Date(r['POD_date']):null;
+      if(pod&&!isNaN(pod)&&(empMap[emp].lastPOD===null||pod>empMap[emp].lastPOD))empMap[emp].lastPOD=pod;
+    }else if(st==='OFD'){onRoad++;empMap[emp].onRoad++;}
+    else if(st==='UNDEL'){undel++;empMap[emp].undel++;if(otp==='OTP Verified'){otpCancel++;empMap[emp].otpCancel++;}}
+    if(otp==='Not OTP Verified'){attempted++;empMap[emp].attempted++;}
+    var drs=r['drs_date']?new Date(r['drs_date']):null;
+    if(drs&&!isNaN(drs)&&(empMap[emp].drsTime===null||drs<empMap[emp].drsTime))empMap[emp].drsTime=drs;
+  });
+  Object.keys(empMap).forEach(function(emp){
+    var e=empMap[emp];
+    if(e.drsTime&&e.lastPOD&&e.del>0){
+      var hrs=(e.lastPOD-e.drsTime)/3600000;
+      e.speedHr=hrs>0?Math.round(e.del/hrs*100)/100:0;
+      e.hrsWorked=Math.round(hrs*100)/100;
+    }
+  });
+  return{total:total,delivered:delivered,onRoad:onRoad,undel:undel,attempted:attempted,otpCancel:otpCancel,empMap:empMap,hubName:hubName};
+}
+
+function procAll(raw){
+  var rows=raw.filter(function(r){var a=parseInt(r['total_attemps']);return a===0||a===1;});
+  var total=rows.length,delivered=0,onRoad=0,undel=0,codCount=0,prepaidCount=0;
+  var empMap={},hourlyData={};
+  
+  var hubName='';
+  for(var ri=0;ri<rows.length;ri++){
+    var loc=String(rows[ri]['LOCATION']||rows[ri]['location']||'').trim();
+    if(loc.length>=3){hubName=loc.slice(-3).toUpperCase();break;}
+  }
+  
+  rows.forEach(function(r){
+    var st=String(r['shipment_status']||'').trim().toUpperCase();
+    var emp=String(r['Employee_name']||'Unknown').trim();
+    var ptype=String(r['payment_type']||'').trim().toUpperCase();
+    
+    if(ptype==='COD')codCount++;
+    else if(ptype==='PREPAID')prepaidCount++;
+    
+    if(!empMap[emp])empMap[emp]={total:0,del:0,onRoad:0,undel:0,cod:0,prepaid:0,drsTime:null,lastPOD:null,speedHr:0,hrsWorked:0,deliveries:[]};
+    empMap[emp].total++;
+    if(ptype==='COD')empMap[emp].cod++;
+    else if(ptype==='PREPAID')empMap[emp].prepaid++;
+    
+    if(st==='DEL'){
+      delivered++;empMap[emp].del++;
+      var pod=r['POD_date']?new Date(r['POD_date']):null;
+      if(pod&&!isNaN(pod)){
+        if(empMap[emp].lastPOD===null||pod>empMap[emp].lastPOD)empMap[emp].lastPOD=pod;
+        var hr=pod.getHours();
+        empMap[emp].deliveries.push({hour:hr,time:pod});
+        if(!hourlyData[hr])hourlyData[hr]={};
+        if(!hourlyData[hr][emp])hourlyData[hr][emp]=0;
+        hourlyData[hr][emp]++;
+      }
+    }else if(st==='OFD'){onRoad++;empMap[emp].onRoad++;}
+    else if(st==='UNDEL'){undel++;empMap[emp].undel++;}
+    
+    var drs=r['drs_date']?new Date(r['drs_date']):null;
+    if(drs&&!isNaN(drs)&&(empMap[emp].drsTime===null||drs<empMap[emp].drsTime))empMap[emp].drsTime=drs;
+  });
+  
+  Object.keys(empMap).forEach(function(emp){
+    var e=empMap[emp];
+    if(e.drsTime&&e.lastPOD&&e.del>0){
+      var hrs=(e.lastPOD-e.drsTime)/3600000;
+      e.speedHr=hrs>0?Math.round(e.del/hrs*100)/100:0;
+      e.hrsWorked=Math.round(hrs*100)/100;
+    }
+  });
+  
+  return{total:total,delivered:delivered,onRoad:onRoad,undel:undel,codCount:codCount,prepaidCount:prepaidCount,empMap:empMap,hourlyData:hourlyData,hubName:hubName};
+}
+
+var selectedHistoryIndices = [];
+
+function saveToHistory(ts,codData,allData){
+  try{
+    var history=JSON.parse(localStorage.getItem('codHistory')||'[]');
+    var entry={ts:ts,cod:codData,all:allData,saved:new Date().toISOString()};
+    history.unshift(entry);
+    if(history.length>20)history=history.slice(0,20);
+    localStorage.setItem('codHistory',JSON.stringify(history));
+  }catch(e){console.error('Failed to save history:',e);}
+}
+
+async function loadHistory() {
+  const token = localStorage.getItem('authToken');
+  try {
+    const res = await fetch(window.location.origin + '/api/reports/history', {
+      headers: { 'Authorization': 'Bearer ' + token }
+    });
+    if (res.ok) {
+      const history = await res.json();
+      localStorage.setItem('codHistory', JSON.stringify(history));
+      return history;
+    }
+  } catch (e) {}
+  return JSON.parse(localStorage.getItem('codHistory') || '[]');
+}
+
+function toggleHistoryDropdown(){
+  var menu=document.getElementById('historyMenu');
+  var btn=document.getElementById('historyBtn');
+  if(menu.classList.contains('show')){
+    menu.classList.remove('show');
+    btn.classList.remove('active');
+  }else{
+    menu.classList.add('show');
+    btn.classList.add('active');
+    displayHistory();
+  }
+}
+
+async function displayHistory(){
+  var history = await loadHistory();
+  var html='';
+  if(history.length===0){
+    html='<div class="history-empty">No history yet.<br>Upload reports to build history.</div>';
+  }else{
+    var byDate = {};
+    history.forEach(function(h){
+      var date = h.ts.split(' ')[0];
+      if(!byDate[date] || new Date(h.saved || 0) > new Date(byDate[date].saved || 0)){
+        byDate[date] = h;
+      }
+    });
+    
+    var lastReports = Object.keys(byDate).map(function(date){
+      return byDate[date];
+    }).sort(function(a,b){
+      return new Date(b.saved || b.ts) - new Date(a.saved || a.ts);
+    });
+    
+    lastReports.forEach(function(h,i){
+      var dp=pct(h.cod.delivered,h.cod.total);
+      var isSelected=selectedHistoryIndices.indexOf(i)!==-1;
+      var date = h.ts.split(' ')[0];
+      var hub = h.cod.hubName || 'Unknown Hub';
+      
+      html+='<div class="history-item'+(isSelected?' selected':'')+'" onclick="toggleHistoryItem('+i+')">';
+      html+='<div class="history-checkbox"></div>';
+      html+='<div class="history-item-content">';
+      html+='<div class="history-item-date" style="color:var(--blue);font-weight:700;">📅 '+date+'</div>';
+      html+='<div class="history-item-stats" style="color:var(--muted);">'+hub+' · COD: '+h.cod.total+' · All: '+h.all.total+'</div>';
+      html+='</div>';
+      html+='<div class="history-item-del" style="text-align:right;">'+h.cod.delivered+' DEL<br><span style="color:var(--green);font-weight:700;">'+f1(dp)+'%</span></div>';
+      html+='</div>';
+    });
+  }
+  document.getElementById('historyList').innerHTML=html;
+}
+
+function toggleHistoryItem(idx){
+  var pos=selectedHistoryIndices.indexOf(idx);
+  if(pos===-1){
+    selectedHistoryIndices.push(idx);
+  }else{
+    selectedHistoryIndices.splice(pos,1);
+  }
+  displayHistory();
+}
+
+function clearSelection(){
+  selectedHistoryIndices=[];
+  displayHistory();
+}
+
+async function loadSelectedHistory(){
+  if(selectedHistoryIndices.length===0){
+    alert('Please select at least one date');
+    return;
+  }
+  
+  var history = await loadHistory();
+  
+  if(selectedHistoryIndices.length===1){
+    var h=history[selectedHistoryIndices[0]];
+    r1={data:h.cod,dataAll:h.all,ts:h.ts};
+    document.getElementById('r1t').textContent=h.ts;
+    document.getElementById('i1').textContent='\u2713 Loaded from history';
+    document.getElementById('i1').className='uinfo ok';
+  }else{
+    var merged=mergeMultipleReports(selectedHistoryIndices.map(function(i){return history[i];}));
+    r1={data:merged.cod,dataAll:merged.all,ts:merged.ts};
+    document.getElementById('r1t').textContent=merged.ts;
+    document.getElementById('i1').textContent='\u2713 Loaded '+selectedHistoryIndices.length+' reports';
+    document.getElementById('i1').className='uinfo ok';
+  }
+  
+  document.getElementById('historyMenu').classList.remove('show');
+  document.getElementById('historyBtn').classList.remove('active');
+  selectedHistoryIndices=[];
+  
+  draw();
+}
+
+function mergeMultipleReports(reports){
+  var dates=reports.map(function(r){return r.ts;}).join(', ');
+  var mergedCod={total:0,delivered:0,onRoad:0,undel:0,attempted:0,otpCancel:0,empMap:{},hubName:reports[0].cod.hubName};
+  var mergedAll={total:0,delivered:0,onRoad:0,undel:0,codCount:0,prepaidCount:0,empMap:{},hourlyData:{},hubName:reports[0].all.hubName};
+  
+  reports.forEach(function(r){
+    mergedCod.total+=r.cod.total;
+    mergedCod.delivered+=r.cod.delivered;
+    mergedCod.onRoad+=r.cod.onRoad;
+    mergedCod.undel+=r.cod.undel;
+    mergedCod.attempted+=r.cod.attempted;
+    mergedCod.otpCancel+=r.cod.otpCancel;
+    
+    Object.keys(r.cod.empMap).forEach(function(emp){
+      if(!mergedCod.empMap[emp]){
+        mergedCod.empMap[emp]={total:0,del:0,onRoad:0,undel:0,otpCancel:0,attempted:0,drsTime:null,lastPOD:null,speedHr:0,hrsWorked:0};
+      }
+      var e=r.cod.empMap[emp];
+      mergedCod.empMap[emp].total+=e.total;
+      mergedCod.empMap[emp].del+=e.del;
+      mergedCod.empMap[emp].onRoad+=e.onRoad;
+      mergedCod.empMap[emp].undel+=e.undel;
+      mergedCod.empMap[emp].otpCancel+=e.otpCancel;
+      mergedCod.empMap[emp].attempted+=e.attempted;
+    });
+    
+    mergedAll.total+=r.all.total;
+    mergedAll.delivered+=r.all.delivered;
+    mergedAll.onRoad+=r.all.onRoad;
+    mergedAll.undel+=r.all.undel;
+    mergedAll.codCount+=r.all.codCount;
+    mergedAll.prepaidCount+=r.all.prepaidCount;
+    
+    Object.keys(r.all.empMap).forEach(function(emp){
+      if(!mergedAll.empMap[emp]){
+        mergedAll.empMap[emp]={total:0,del:0,onRoad:0,undel:0,cod:0,prepaid:0,drsTime:null,lastPOD:null,speedHr:0,hrsWorked:0,deliveries:[]};
+      }
+      var e=r.all.empMap[emp];
+      mergedAll.empMap[emp].total+=e.total;
+      mergedAll.empMap[emp].del+=e.del;
+      mergedAll.empMap[emp].onRoad+=e.onRoad;
+      mergedAll.empMap[emp].undel+=e.undel;
+      mergedAll.empMap[emp].cod+=e.cod;
+      mergedAll.empMap[emp].prepaid+=e.prepaid;
+    });
+    
+    Object.keys(r.all.hourlyData||{}).forEach(function(hr){
+      if(!mergedAll.hourlyData[hr])mergedAll.hourlyData[hr]={};
+      Object.keys(r.all.hourlyData[hr]).forEach(function(emp){
+        if(!mergedAll.hourlyData[hr][emp])mergedAll.hourlyData[hr][emp]=0;
+        mergedAll.hourlyData[hr][emp]+=r.all.hourlyData[hr][emp];
+      });
+    });
+  });
+  
+  Object.keys(mergedCod.empMap).forEach(function(emp){
+    var e=mergedCod.empMap[emp];
+    if(e.total>0)e.speedHr=Math.round(e.del/reports.length*100)/100;
+  });
+  Object.keys(mergedAll.empMap).forEach(function(emp){
+    var e=mergedAll.empMap[emp];
+    if(e.total>0)e.speedHr=Math.round(e.del/reports.length*100)/100;
+  });
+  
+  return{cod:mergedCod,all:mergedAll,ts:'Combined: '+dates};
+}
+
+function pct(n,d){return d>0?(n/d*100):0;}
+function f1(v){return parseFloat(v).toFixed(1);}
+function f2(v){return parseFloat(v).toFixed(2);}
+function avgSpeed(m){
+  var s=[],k=Object.keys(m);
+  k.forEach(function(k){if(m[k].speedHr>0)s.push(m[k].speedHr);});
+  return s.length?s.reduce(function(a,b){return a+b;})/s.length:0;
+}
+function pcls(v){return v>=70?'chip-grn':v>=50?'chip-amb':'chip-red';}
+
+function draw(){
+  if(!r1)return;
+  var d=r1.data;
+  var tgtDel=Math.ceil(d.total*TGT/100),rem=Math.max(0,tgtDel-d.delivered);
+  var dp=pct(d.delivered,d.total),atPct=pct(d.attempted,d.total),opPct=pct(d.otpCancel,d.total);
+  var bp=Math.min(100,dp),tlp=Math.min(97,TGT);
+  var emps=Object.entries(d.empMap).sort(function(a,b){return pct(b[1].del,b[1].total)-pct(a[1].del,a[1].total);});
+  var html='';
+
+  var hubLabel=d.hubName?(' — '+d.hubName):'';
+  html+='<div class="section-header">';
+  html+='<div><h2>COD Performance Report'+hubLabel+'</h2><div class="sh-meta">'+r1.ts+' &nbsp;·&nbsp; COD only &nbsp;·&nbsp; Attempt 0 &amp; 1</div></div>';
+  html+='<span class="section-tag">76% Target</span>';
+  html+='</div>';
+
+  html+='<div class="target-block">';
+  html+='<div>';
+  html+='<div class="tl-label">Daily Target Progress</div>';
+  html+='<div class="tl-meta">Total shipments: <b>'+d.total+'</b> &nbsp;·&nbsp; Target: <b>'+tgtDel+' deliveries</b> &nbsp;·&nbsp; Remaining: <b>'+(rem>0?rem:'0 — Done!')+'</b></div>';
+  html+='</div>';
+  html+='<div class="target-pct-wrap">';
+  html+='<div class="target-pct">'+f1(dp)+'%</div>';
+  html+='<div class="target-pct-sub'+(rem===0?' ok':'')+'">'+( rem>0?'⚠ '+rem+' more needed':'✓ Target achieved')+'</div>';
+  html+='</div>';
+  html+='<div class="progress-wrap">';
+  html+='<div class="progress-meta"><span>0%</span><span>76% target = '+tgtDel+' deliveries</span><span>100%</span></div>';
+  html+='<div class="progress-track">';
+  html+='<div class="tgt-marker" style="left:'+tlp+'%"><span class="tgt-marker-label">76%</span></div>';
+  html+='<div class="progress-fill" style="width:'+bp+'%"></div>';
+  html+='</div></div>';
+  html+='</div>';
+
+  html+='<div class="kpi-grid" style="margin-bottom:24px;">';
+  html+='<div class="kpi-card kc-grn"><div class="kpi-notch"></div><div class="kpi-label">Delivery %</div><div class="kpi-value">'+f1(dp)+'%</div><div class="kpi-sub">'+d.delivered+' of '+d.total+'</div></div>';
+  html+='<div class="kpi-card kc-amb"><div class="kpi-notch"></div><div class="kpi-label">Out on Road</div><div class="kpi-value">'+d.onRoad+'</div><div class="kpi-sub">In field</div></div>';
+  html+='<div class="kpi-card kc-red"><div class="kpi-notch"></div><div class="kpi-label">Undelivered</div><div class="kpi-value">'+d.undel+'</div><div class="kpi-sub">UNDEL status</div></div>';
+  html+='<div class="kpi-card kc-blu"><div class="kpi-notch"></div><div class="kpi-label">Attempt %</div><div class="kpi-value">'+f1(atPct)+'%</div><div class="kpi-sub">'+d.attempted+' Not OTP Verified</div></div>';
+  html+='<div class="kpi-card kc-org"><div class="kpi-notch"></div><div class="kpi-label">OTP Cancel %</div><div class="kpi-value">'+f1(opPct)+'%</div><div class="kpi-sub">Count: '+d.otpCancel+'</div></div>';
+  html+='<div class="kpi-card kc-pur"><div class="kpi-notch"></div><div class="kpi-label">Avg Speed</div><div class="kpi-value">'+f2(avgSpeed(d.empMap))+'</div><div class="kpi-sub">deliveries / hr</div></div>';
+  html+='</div>';
+
+  html+='<button class="dl-btn" onclick="downloadPNG()" title="Download WhatsApp Report"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg><span class="dl-btn-text">Download WhatsApp Report</span></button>';
+
+  if(r1.dataAll){
+    var dAll=r1.dataAll;
+    html+='<div class="section-header" style="margin-top:32px;">';
+    html+='<h2>Hourly Delivery Timeline</h2>';
+    html+='</div>';
+    html+='<div class="chart-container"><canvas id="hourlyChart"></canvas></div>';
+  }
+
+  html+='<div class="section-header" style="margin-top:44px;">';
+  html+='<div><h2>COD Rider Performance</h2><div class="sh-meta">COD only · Sorted by delivery rate</div></div>';
+  html+='</div>';
+  html+='<div class="table-scroll"><div class="table-wrap">';
+  html+='<table><thead><tr><th>#</th><th>Name</th><th>Total</th><th>DEL</th><th>On Road</th><th>UNDEL</th><th>Attempt</th><th>OTP ✗</th><th>Del %</th><th>Att %</th><th>OTP Cancel %</th><th>Speed/hr</th><th>Hrs</th></tr></thead><tbody>';
+  emps.forEach(function(kv,i){
+    var emp=kv[0],e=kv[1];
+    var edp=pct(e.del,e.total),eap=pct(e.attempted,e.total),eop=pct(e.otpCancel,e.total);
+    html+='<tr>'
+      +'<td style="color:var(--faint);font-weight:500">'+(i+1)+'</td>'
+      +'<td class="td-name">'+emp+'</td>'
+      +'<td class="td-num">'+e.total+'</td>'
+      +'<td class="td-num" style="color:var(--green)">'+e.del+'</td>'
+      +'<td class="td-num" style="color:var(--amber)">'+e.onRoad+'</td>'
+      +'<td class="td-num" style="color:var(--red)">'+e.undel+'</td>'
+      +'<td class="td-num" style="color:var(--blue)">'+e.attempted+'</td>'
+      +'<td class="td-num" style="color:var(--orange)">'+e.otpCancel+'</td>'
+      +'<td><span class="chip '+pcls(edp)+'">'+f1(edp)+'%</span></td>'
+      +'<td><span class="chip chip-blu">'+f1(eap)+'%</span></td>'
+      +'<td><span class="chip '+(eop>10?'chip-red':'chip-amb')+'">'+f1(eop)+'%</span></td>'
+      +'<td style="color:var(--purple);font-weight:700">'+f2(e.speedHr)+'/hr</td>'
+      +'<td style="color:var(--faint)">'+f2(e.hrsWorked)+'h</td>'
+      +'</tr>';
+  });
+  html+='</tbody></table></div></div>';
+
+  html+='<div class="section-header" style="margin-top:44px;"><h2>Status Breakdown</h2></div>';
+  html+='<div class="table-scroll"><div class="table-wrap"><table><thead><tr><th>Status</th><th>Count</th><th>Share</th><th style="min-width:220px;text-align:left;padding-left:16px;">Visual</th></tr></thead><tbody>';
+  [{lbl:'Delivered',v:d.delivered,clr:'#1A7A4A',cls:'chip-grn'},{lbl:'Out on Road',v:d.onRoad,clr:'#D97706',cls:'chip-amb'},{lbl:'Undelivered',v:d.undel,clr:'#B91C1C',cls:'chip-red'},{lbl:'Attempt (Not OTP Verified)',v:d.attempted,clr:'#1B4FD8',cls:'chip-blu'},{lbl:'OTP Cancelled',v:d.otpCancel,clr:'#C2410C',cls:'chip-org'}].forEach(function(s){
+    var p=pct(s.v,d.total);
+    html+='<tr><td class="td-name">'+s.lbl+'</td><td class="td-num">'+s.v+'</td><td><span class="chip '+s.cls+'">'+f1(p)+'%</span></td><td style="text-align:left;padding-left:16px;padding-right:24px;"><div class="mini-bar"><div class="mini-bar-fill" style="width:'+p+'%;background:'+s.clr+'"></div></div></td></tr>';
+  });
+  html+='</tbody></table></div></div>';
+
+  document.getElementById('main').innerHTML=html;
+  
+  if(r1.dataAll){
+    renderHourlyChart(r1.dataAll);
+  }
+}
+
+var hourlyChartInstance=null;
+
+function renderHourlyChart(dAll){
+  if(hourlyChartInstance){
+    hourlyChartInstance.destroy();
+    hourlyChartInstance=null;
+  }
+  
+  var ctx=document.getElementById('hourlyChart');
+  if(!ctx)return;
+  
+  var riders=Object.keys(dAll.empMap).sort();
+  var colors=['#1A7A4A','#1B4FD8','#C2410C','#6D28D9','#D97706','#B91C1C','#0EA5E9','#EC4899','#8B5CF6','#F59E0B'];
+  var datasets=[];
+  
+  riders.forEach(function(rider,idx){
+    var data=[];
+    for(var h=0;h<24;h++){
+      var count=(dAll.hourlyData[h]&&dAll.hourlyData[h][rider])||0;
+      data.push(count);
+    }
+    datasets.push({
+      label:rider,
+      data:data,
+      backgroundColor:colors[idx%colors.length],
+      borderColor:colors[idx%colors.length],
+      borderWidth:0,
+      barPercentage:0.9,
+      categoryPercentage:0.85
+    });
+  });
+  
+  hourlyChartInstance=new Chart(ctx,{
+    type:'bar',
+    data:{
+      labels:['00','01','02','03','04','05','06','07','08','09','10','11','12','13','14','15','16','17','18','19','20','21','22','23'],
+      datasets:datasets
+    },
+    options:{
+      responsive:true,
+      maintainAspectRatio:true,
+      plugins:{
+        legend:{display:true,position:'bottom'},
+        title:{display:false},
+        tooltip:{
+          mode:'index',
+          intersect:false,
+          callbacks:{
+            footer:function(items){
+              var sum=items.reduce(function(a,i){return a+i.parsed.y;},0);
+              return 'Total: '+sum;
+            }
+          }
+        }
+      },
+      scales:{
+        x:{
+          stacked:true,
+          title:{display:true,text:'Hour of Day',font:{size:12}},
+          grid:{display:false}
+        },
+        y:{
+          stacked:true,
+          title:{display:true,text:'Deliveries',font:{size:12}},
+          grid:{color:'#EDECEA'},
+          ticks:{precision:0}
+        }
+      }
+    }
+  });
+}
+
+function downloadPNG(){
+  if(!r1)return;
+  var d=r1.data;
+  var tgtDel=Math.ceil(d.total*TGT/100),rem=Math.max(0,tgtDel-d.delivered);
+  var dp=pct(d.delivered,d.total),atPct=pct(d.attempted,d.total),opPct=pct(d.otpCancel,d.total),bp=Math.min(100,dp);
+  var emps=Object.entries(d.empMap).sort(function(a,b){return pct(b[1].del,b[1].total)-pct(a[1].del,a[1].total);});
+  var eRows='';
+  emps.forEach(function(kv){
+    var emp=kv[0],e=kv[1],edp=pct(e.del,e.total);
+    var cls=edp>=70?'sc-grn':edp>=50?'sc-amb':'sc-red';
+    var nm=emp.split(' ').slice(0,2).join(' ');if(nm.length>18)nm=emp.split(' ')[0];
+    eRows+='<tr>'
+      +'<td>'+nm+'</td>'
+      +'<td>'+e.total+'</td>'
+      +'<td style="color:#1A7A4A;font-weight:800">'+e.del+'</td>'
+      +'<td style="color:#92580A;font-weight:800">'+e.onRoad+'</td>'
+      +'<td style="color:#B91C1C;font-weight:800">'+e.undel+'</td>'
+      +'<td style="color:#1B4FD8;font-weight:800">'+e.attempted+'</td>'
+      +'<td style="color:#C2410C;font-weight:800">'+e.otpCancel+'</td>'
+      +'<td><span class="sn-chip '+cls+'">'+f1(edp)+'%</span></td>'
+      +'<td style="color:#6D28D9;font-weight:800">'+f2(e.speedHr)+'/h</td>'
+      +'</tr>';
+  });
+
+  var hubLabel=d.hubName?(' — '+d.hubName):'';
+  var snap=document.getElementById('snapCard');
+  snap.innerHTML=
+    '<div class="sn-header">'
+      +'<div class="sn-brand"><div class="sn-mark">C</div><div><h2>COD Performance'+hubLabel+'</h2><div class="sn-meta">'+r1.ts+' &nbsp;·&nbsp; COD Only · Attempt 0 &amp; 1</div></div></div>'
+    +'</div>'
+    +'<div class="sn-tgt">'
+      +'<div class="sn-tgt-top">'
+        +'<div><div class="sn-tgt-label">Daily Target Progress</div><div class="sn-tgt-meta">Total: <b>'+d.total+'</b> &nbsp;·&nbsp; Target: <b>'+tgtDel+'</b> &nbsp;·&nbsp; Remaining: <b>'+(rem>0?rem:'Done!')+'</b></div></div>'
+        +'<div><div class="sn-pct">'+f1(dp)+'%</div><div class="sn-pct-sub'+(rem===0?' ok':'')+'">'+( rem>0?'⚠ '+rem+' needed':'✓ Achieved')+'</div></div>'
+      +'</div>'
+      +'<div class="sn-bar-wrap">'
+        +'<div class="sn-bar-marker" style="left:'+Math.min(97,TGT)+'%"><span class="sn-bar-marker-lbl">76% = '+tgtDel+'</span></div>'
+        +'<div class="sn-bar-track"><div class="sn-bar-fill" style="width:'+bp+'%"></div></div>'
+      +'</div>'
+    +'</div>'
+    +'<div class="sn-kpi">'
+      +'<div class="sn-kpi-card kgrn"><div class="sn-notch"></div><div class="sn-klbl">Delivery</div><div class="sn-kval">'+f1(dp)+'%</div><div class="sn-ksub">'+d.delivered+' of '+d.total+'</div></div>'
+      +'<div class="sn-kpi-card kamb"><div class="sn-notch"></div><div class="sn-klbl">On Road</div><div class="sn-kval">'+d.onRoad+'</div><div class="sn-ksub">In field</div></div>'
+      +'<div class="sn-kpi-card kred"><div class="sn-notch"></div><div class="sn-klbl">Undelivered</div><div class="sn-kval">'+d.undel+'</div><div class="sn-ksub">UNDEL</div></div>'
+      +'<div class="sn-kpi-card kblu"><div class="sn-notch"></div><div class="sn-klbl">Attempt %</div><div class="sn-kval">'+f1(atPct)+'%</div><div class="sn-ksub">'+d.attempted+' not OTP</div></div>'
+      +'<div class="sn-kpi-card korg"><div class="sn-notch"></div><div class="sn-klbl">OTP Cancel %</div><div class="sn-kval">'+f1(opPct)+'%</div><div class="sn-ksub">Count: '+d.otpCancel+'</div></div>'
+      +'<div class="sn-kpi-card kpur"><div class="sn-notch"></div><div class="sn-klbl">Avg Speed</div><div class="sn-kval" style="font-size:19px">'+f2(avgSpeed(d.empMap))+'</div><div class="sn-ksub">del / hr</div></div>'
+    +'</div>'
+    +'<table class="sn-tbl"><thead><tr>'
+      +'<th style="text-align:left;padding-left:10px">Rider</th><th>TOT</th>'
+      +'<th style="color:#1A7A4A">DEL</th><th style="color:#92580A">ROAD</th>'
+      +'<th style="color:#B91C1C">UNDEL</th><th style="color:#1B4FD8">ATTMP</th>'
+      +'<th style="color:#C2410C">OTP✗</th><th>DEL%</th><th style="color:#6D28D9">SPD</th>'
+    +'</tr></thead><tbody>'+eRows+'</tbody></table>'
+    +'<div class="sn-footer">Generated '+new Date().toLocaleString('en-IN',{timeZone:'Asia/Kolkata'})+' &nbsp;·&nbsp; COD Performance Dashboard</div>';
+
+  snap.style.opacity='1'; snap.style.zIndex='9999';
+  setTimeout(function(){
+    html2canvas(snap,{
+      scale:3, backgroundColor:'#F4F3EE', useCORS:true, logging:false,
+      width:snap.scrollWidth, height:snap.scrollHeight,
+      windowWidth:snap.scrollWidth, windowHeight:snap.scrollHeight
+    }).then(function(canvas){
+      snap.style.opacity='0'; snap.style.zIndex='-1';
+      var a=document.createElement('a');
+      a.download='COD_Report'+(d.hubName?'_'+d.hubName:'')+'_'+r1.ts.replace(/[: ]/g,'-')+'.png';
+      a.href=canvas.toDataURL('image/png');
+      a.click();
+    });
+  },150);
+}
+
+(function(){
+  var embedded={"total": 341, "delivered": 127, "onRoad": 179, "undel": 35, "attempted": 12, "otpCancel": 24, "hubName": "GRS", "empMap": {"Aditya Kushwaha": {"total": 53, "del": 31, "onRoad": 17, "undel": 5, "otpCancel": 4, "attempted": 1, "drsTime": "2026-02-17 09:31:02", "lastPOD": "2026-02-17 15:11:25", "speedHr": 5.46, "hrsWorked": 5.67}, "Suresh Kumar": {"total": 62, "del": 18, "onRoad": 36, "undel": 8, "otpCancel": 4, "attempted": 4, "drsTime": "2026-02-17 09:40:16", "lastPOD": "2026-02-17 14:56:29", "speedHr": 3.42, "hrsWorked": 5.27}, "shailendra pratap singh": {"total": 49, "del": 26, "onRoad": 18, "undel": 5, "otpCancel": 3, "attempted": 2, "drsTime": "2026-02-17 09:46:59", "lastPOD": "2026-02-17 15:16:05", "speedHr": 4.74, "hrsWorked": 5.49}, "Khushbu": {"total": 25, "del": 16, "onRoad": 6, "undel": 3, "otpCancel": 2, "attempted": 1, "drsTime": "2026-02-17 09:53:31", "lastPOD": "2026-02-17 14:39:16", "speedHr": 3.36, "hrsWorked": 4.76}, "sharad pratap singh": {"total": 43, "del": 8, "onRoad": 31, "undel": 4, "otpCancel": 1, "attempted": 4, "drsTime": "2026-02-17 10:06:40", "lastPOD": "2026-02-17 13:22:52", "speedHr": 2.45, "hrsWorked": 3.27}, "Mamta Devi": {"total": 18, "del": 12, "onRoad": 5, "undel": 1, "otpCancel": 1, "attempted": 0, "drsTime": "2026-02-17 10:20:06", "lastPOD": "2026-02-17 12:58:43", "speedHr": 4.54, "hrsWorked": 2.64}, "arvindra kumar": {"total": 40, "del": 9, "onRoad": 24, "undel": 7, "otpCancel": 7, "attempted": 0, "drsTime": "2026-02-17 11:32:52", "lastPOD": "2026-02-17 15:11:08", "speedHr": 2.47, "hrsWorked": 3.64}, "Nidhi Namdev": {"total": 51, "del": 7, "onRoad": 42, "undel": 2, "otpCancel": 2, "attempted": 0, "drsTime": "2026-02-17 12:14:20", "lastPOD": "2026-02-17 14:07:38", "speedHr": 3.71, "hrsWorked": 1.89}}};
+  
+  var embeddedAll={"total": 485, "delivered": 182, "onRoad": 254, "undel": 49, "codCount": 341, "prepaidCount": 144, "hubName": "GRS", "empMap": {"Aditya Kushwaha": {"total": 75, "del": 44, "onRoad": 24, "undel": 7, "cod": 53, "prepaid": 22, "speedHr": 5.46, "hrsWorked": 8.05, "deliveries": []}, "Suresh Kumar": {"total": 88, "del": 26, "onRoad": 51, "undel": 11, "cod": 62, "prepaid": 26, "speedHr": 3.42, "hrsWorked": 7.60, "deliveries": []}, "shailendra pratap singh": {"total": 70, "del": 37, "onRoad": 26, "undel": 7, "cod": 49, "prepaid": 21, "speedHr": 4.74, "hrsWorked": 7.81, "deliveries": []}, "Khushbu": {"total": 36, "del": 23, "onRoad": 9, "undel": 4, "cod": 25, "prepaid": 11, "speedHr": 3.36, "hrsWorked": 6.84, "deliveries": []}, "sharad pratap singh": {"total": 61, "del": 11, "onRoad": 44, "undel": 6, "cod": 43, "prepaid": 18, "speedHr": 2.45, "hrsWorked": 4.49, "deliveries": []}, "Mamta Devi": {"total": 26, "del": 17, "onRoad": 7, "undel": 2, "cod": 18, "prepaid": 8, "speedHr": 4.54, "hrsWorked": 3.73, "deliveries": []}, "arvindra kumar": {"total": 57, "del": 13, "onRoad": 34, "undel": 10, "cod": 40, "prepaid": 17, "speedHr": 2.47, "hrsWorked": 5.26, "deliveries": []}, "Nidhi Namdev": {"total": 72, "del": 11, "onRoad": 59, "undel": 2, "cod": 51, "prepaid": 21, "speedHr": 3.71, "hrsWorked": 2.97, "deliveries": []}}, "hourlyData": {"9": {"Aditya Kushwaha": 3, "Khushbu": 2}, "10": {"Aditya Kushwaha": 5, "shailendra pratap singh": 4, "Suresh Kumar": 3}, "11": {"Aditya Kushwaha": 7, "shailendra pratap singh": 5, "Suresh Kumar": 4, "Mamta Devi": 3}, "12": {"Aditya Kushwaha": 8, "shailendra pratap singh": 6, "Suresh Kumar": 5, "Mamta Devi": 4, "Khushbu": 5}, "13": {"Aditya Kushwaha": 9, "shailendra pratap singh": 8, "Suresh Kumar": 6, "sharad pratap singh": 2, "arvindra kumar": 3}, "14": {"Aditya Kushwaha": 7, "shailendra pratap singh": 7, "Suresh Kumar": 5, "Khushbu": 8, "arvindra kumar": 4, "Nidhi Namdev": 6}, "15": {"Aditya Kushwaha": 5, "shailendra pratap singh": 7, "Mamta Devi": 10, "arvindra kumar": 6, "Nidhi Namdev": 5}}};
+  
+  r1={data:embedded,dataAll:embeddedAll,ts:'2026-02-17 09:46'};
+  document.getElementById('r1t').textContent='09:46';
+  document.getElementById('i1').textContent='\u2713 Pre-loaded from today\'s report';
+  document.getElementById('i1').className='uinfo ok';
+  draw();
+})();
+</script>
+</body>
+</html>
