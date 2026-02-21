@@ -904,6 +904,28 @@ function parseFname(n){
   var m=n.match(/(\d{4}-\d{2}-\d{2}T\d{2}[_:]\d{2}[_:]\d{2})/);
   return m?m[1].replace(/_/g,':'):'Unknown';
 }
+  // Save report to MongoDB
+async function saveToServer(ts, codData, allData) {
+  const token = localStorage.getItem('authToken');
+  try {
+    await fetch(window.location.origin + '/api/reports/save', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer ' + token
+      },
+      body: JSON.stringify({
+        timestamp: ts,
+        codData: codData,
+        allData: allData || {},
+        hubName: codData.hubName || ''
+      })
+    });
+    console.log('✅ Saved to server');
+  } catch (e) {
+    console.log('⚠️ Server save failed, using localStorage');
+  }
+}
 
 function loadFile(el,num){
   var f=el.files[0]; if(!f)return;
@@ -916,6 +938,7 @@ function loadFile(el,num){
       var d=proc(raw),dAll=procAll(raw),ts=parseFname(f.name);
       
       if(num===1){
+        saveToServer(ts, d, dAll);
         r1={data:d,dataAll:dAll,ts:ts,raw:raw};
         document.getElementById('r1t').textContent=ts;
         document.getElementById('i1').textContent='\u2713 '+f.name;
@@ -1044,11 +1067,20 @@ function saveToHistory(ts,codData,allData){
     localStorage.setItem('codHistory',JSON.stringify(history));
   }catch(e){console.error('Failed to save history:',e);}
 }
+async function loadHistory() {
+  const token = localStorage.getItem('authToken');
+  try {
+    const res = await fetch(window.location.origin + '/api/reports/history', {
+      headers: { 'Authorization': 'Bearer ' + token }
+    });
+    if (res.ok) {
+      const history = await res.json();
+      localStorage.setItem('codHistory', JSON.stringify(history));
+      return history;
+    }
+  } catch (e) {}
+  return JSON.parse(localStorage.getItem('codHistory') || '[]');
 
-function loadHistory(){
-  try{
-    return JSON.parse(localStorage.getItem('codHistory')||'[]');
-  }catch(e){return[];}
 }
 
 function toggleHistoryDropdown(){
