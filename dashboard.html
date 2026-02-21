@@ -997,6 +997,28 @@ async function saveToServer(ts, codData, allData) {
     console.log('⚠️ Server save failed, using localStorage');
   }
 }
+  // Save report to MongoDB
+async function saveToServer(ts, codData, allData) {
+  const token = localStorage.getItem('authToken');
+  try {
+    await fetch(window.location.origin + '/api/reports/save', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer ' + token
+      },
+      body: JSON.stringify({
+        timestamp: ts,
+        codData: codData,
+        allData: allData || {},
+        hubName: codData.hubName || ''
+      })
+    });
+    console.log('✅ Saved to server');
+  } catch (e) {
+    console.log('⚠️ Server save failed, using localStorage');
+  }
+}
 
 function loadFile(el,num){
   var f=el.files[0]; if(!f)return;
@@ -1011,6 +1033,7 @@ function loadFile(el,num){
       if(num===1){
         saveToServer(ts, d, dAll);
         r1={data:d,dataAll:dAll,ts:ts,raw:raw};
+        saveToServer(ts, d, dAll);
         document.getElementById('r1t').textContent=ts;
         document.getElementById('i1').textContent='\u2713 '+f.name;
         document.getElementById('i1').className='uinfo ok';
@@ -1151,7 +1174,7 @@ async function loadHistory() {
     }
   } catch (e) {}
   return JSON.parse(localStorage.getItem('codHistory') || '[]');
-
+}
 }
 
 function toggleHistoryDropdown(){
