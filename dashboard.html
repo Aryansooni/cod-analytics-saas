@@ -1481,16 +1481,38 @@ function downloadPNG(){
   },150);
 }
 
-(function(){
-  var embedded={"total": 341, "delivered": 127, "onRoad": 179, "undel": 35, "attempted": 12, "otpCancel": 24, "hubName": "GRS", "empMap": {"Aditya Kushwaha": {"total": 53, "del": 31, "onRoad": 17, "undel": 5, "otpCancel": 4, "attempted": 1, "drsTime": "2026-02-17 09:31:02", "lastPOD": "2026-02-17 15:11:25", "speedHr": 5.46, "hrsWorked": 5.67}, "Suresh Kumar": {"total": 62, "del": 18, "onRoad": 36, "undel": 8, "otpCancel": 4, "attempted": 4, "drsTime": "2026-02-17 09:40:16", "lastPOD": "2026-02-17 14:56:29", "speedHr": 3.42, "hrsWorked": 5.27}, "shailendra pratap singh": {"total": 49, "del": 26, "onRoad": 18, "undel": 5, "otpCancel": 3, "attempted": 2, "drsTime": "2026-02-17 09:46:59", "lastPOD": "2026-02-17 15:16:05", "speedHr": 4.74, "hrsWorked": 5.49}, "Khushbu": {"total": 25, "del": 16, "onRoad": 6, "undel": 3, "otpCancel": 2, "attempted": 1, "drsTime": "2026-02-17 09:53:31", "lastPOD": "2026-02-17 14:39:16", "speedHr": 3.36, "hrsWorked": 4.76}, "sharad pratap singh": {"total": 43, "del": 8, "onRoad": 31, "undel": 4, "otpCancel": 1, "attempted": 4, "drsTime": "2026-02-17 10:06:40", "lastPOD": "2026-02-17 13:22:52", "speedHr": 2.45, "hrsWorked": 3.27}, "Mamta Devi": {"total": 18, "del": 12, "onRoad": 5, "undel": 1, "otpCancel": 1, "attempted": 0, "drsTime": "2026-02-17 10:20:06", "lastPOD": "2026-02-17 12:58:43", "speedHr": 4.54, "hrsWorked": 2.64}, "arvindra kumar": {"total": 40, "del": 9, "onRoad": 24, "undel": 7, "otpCancel": 7, "attempted": 0, "drsTime": "2026-02-17 11:32:52", "lastPOD": "2026-02-17 15:11:08", "speedHr": 2.47, "hrsWorked": 3.64}, "Nidhi Namdev": {"total": 51, "del": 7, "onRoad": 42, "undel": 2, "otpCancel": 2, "attempted": 0, "drsTime": "2026-02-17 12:14:20", "lastPOD": "2026-02-17 14:07:38", "speedHr": 3.71, "hrsWorked": 1.89}}};
+(async function(){
+  const token = localStorage.getItem('authToken');
+  let loaded = false;
   
-  var embeddedAll={"total": 485, "delivered": 182, "onRoad": 254, "undel": 49, "codCount": 341, "prepaidCount": 144, "hubName": "GRS", "empMap": {"Aditya Kushwaha": {"total": 75, "del": 44, "onRoad": 24, "undel": 7, "cod": 53, "prepaid": 22, "speedHr": 5.46, "hrsWorked": 8.05, "deliveries": []}, "Suresh Kumar": {"total": 88, "del": 26, "onRoad": 51, "undel": 11, "cod": 62, "prepaid": 26, "speedHr": 3.42, "hrsWorked": 7.60, "deliveries": []}, "shailendra pratap singh": {"total": 70, "del": 37, "onRoad": 26, "undel": 7, "cod": 49, "prepaid": 21, "speedHr": 4.74, "hrsWorked": 7.81, "deliveries": []}, "Khushbu": {"total": 36, "del": 23, "onRoad": 9, "undel": 4, "cod": 25, "prepaid": 11, "speedHr": 3.36, "hrsWorked": 6.84, "deliveries": []}, "sharad pratap singh": {"total": 61, "del": 11, "onRoad": 44, "undel": 6, "cod": 43, "prepaid": 18, "speedHr": 2.45, "hrsWorked": 4.49, "deliveries": []}, "Mamta Devi": {"total": 26, "del": 17, "onRoad": 7, "undel": 2, "cod": 18, "prepaid": 8, "speedHr": 4.54, "hrsWorked": 3.73, "deliveries": []}, "arvindra kumar": {"total": 57, "del": 13, "onRoad": 34, "undel": 10, "cod": 40, "prepaid": 17, "speedHr": 2.47, "hrsWorked": 5.26, "deliveries": []}, "Nidhi Namdev": {"total": 72, "del": 11, "onRoad": 59, "undel": 2, "cod": 51, "prepaid": 21, "speedHr": 3.71, "hrsWorked": 2.97, "deliveries": []}}, "hourlyData": {"9": {"Aditya Kushwaha": 3, "Khushbu": 2}, "10": {"Aditya Kushwaha": 5, "shailendra pratap singh": 4, "Suresh Kumar": 3}, "11": {"Aditya Kushwaha": 7, "shailendra pratap singh": 5, "Suresh Kumar": 4, "Mamta Devi": 3}, "12": {"Aditya Kushwaha": 8, "shailendra pratap singh": 6, "Suresh Kumar": 5, "Mamta Devi": 4, "Khushbu": 5}, "13": {"Aditya Kushwaha": 9, "shailendra pratap singh": 8, "Suresh Kumar": 6, "sharad pratap singh": 2, "arvindra kumar": 3}, "14": {"Aditya Kushwaha": 7, "shailendra pratap singh": 7, "Suresh Kumar": 5, "Khushbu": 8, "arvindra kumar": 4, "Nidhi Namdev": 6}, "15": {"Aditya Kushwaha": 5, "shailendra pratap singh": 7, "Mamta Devi": 10, "arvindra kumar": 6, "Nidhi Namdev": 5}}};
+  if (token) {
+    try {
+      const res = await fetch(window.location.origin + '/api/reports/history', {
+        headers: { 'Authorization': 'Bearer ' + token }
+      });
+      if (res.ok) {
+        const history = await res.json();
+        if (history.length > 0) {
+          const latest = history[0];
+          r1 = {data: latest.cod, dataAll: latest.all, ts: latest.ts};
+          document.getElementById('r1t').textContent = latest.ts;
+          document.getElementById('i1').textContent = '✓ Your latest report';
+          document.getElementById('i1').className = 'uinfo ok';
+          loaded = true;
+          draw();
+        }
+      }
+    } catch (e) {}
+  }
   
-  r1={data:embedded,dataAll:embeddedAll,ts:'2026-02-17 09:46'};
-  document.getElementById('r1t').textContent='09:46';
-  document.getElementById('i1').textContent='\u2713 Pre-loaded from today\'s report';
-  document.getElementById('i1').className='uinfo ok';
-  draw();
+  if (!loaded) {
+    var demo = {"total": 250, "delivered": 180, "onRoad": 50, "undel": 20, "attempted": 15, "otpCancel": 10, "hubName": "ABS", "empMap": {"Rajesh Kumar": {"total": 50, "del": 38, "onRoad": 8, "undel": 4, "otpCancel": 2, "attempted": 3, "drsTime": "2026-02-20 09:00:00", "lastPOD": "2026-02-20 16:00:00", "speedHr": 5.43, "hrsWorked": 7.0}, "Priya Singh": {"total": 45, "del": 35, "onRoad": 7, "undel": 3, "otpCancel": 2, "attempted": 2, "drsTime": "2026-02-20 09:15:00", "lastPOD": "2026-02-20 15:45:00", "speedHr": 5.25, "hrsWorked": 6.5}, "Amit Sharma": {"total": 55, "del": 40, "onRoad": 10, "undel": 5, "otpCancel": 3, "attempted": 4, "drsTime": "2026-02-20 09:30:00", "lastPOD": "2026-02-20 16:15:00", "speedHr": 5.88, "hrsWorked": 6.75}, "Neha Patel": {"total": 40, "del": 32, "onRoad": 6, "undel": 2, "otpCancel": 1, "attempted": 2, "drsTime": "2026-02-20 09:45:00", "lastPOD": "2026-02-20 15:30:00", "speedHr": 5.57, "hrsWorked": 5.75}, "Vikram Reddy": {"total": 60, "del": 35, "onRoad": 19, "undel": 6, "otpCancel": 2, "attempted": 4, "drsTime": "2026-02-20 10:00:00", "lastPOD": "2026-02-20 16:30:00", "speedHr": 5.38, "hrsWorked": 6.5}}};
+    var demoAll = {"total": 380, "delivered": 270, "onRoad": 80, "undel": 30, "codCount": 250, "prepaidCount": 130, "hubName": "ABS", "empMap": {"Rajesh Kumar": {"total": 76, "del": 58, "onRoad": 12, "undel": 6, "cod": 50, "prepaid": 26, "speedHr": 5.43, "hrsWorked": 10.5, "deliveries": []}, "Priya Singh": {"total": 68, "del": 52, "onRoad": 11, "undel": 5, "cod": 45, "prepaid": 23, "speedHr": 5.25, "hrsWorked": 9.9, "deliveries": []}, "Amit Sharma": {"total": 83, "del": 60, "onRoad": 16, "undel": 7, "cod": 55, "prepaid": 28, "speedHr": 5.88, "hrsWorked": 10.2, "deliveries": []}, "Neha Patel": {"total": 61, "del": 48, "onRoad": 9, "undel": 4, "cod": 40, "prepaid": 21, "speedHr": 5.57, "hrsWorked": 8.6, "deliveries": []}, "Vikram Reddy": {"total": 92, "del": 52, "onRoad": 32, "undel": 8, "cod": 60, "prepaid": 32, "speedHr": 5.38, "hrsWorked": 9.7, "deliveries": []}}, "hourlyData": {"9": {"Rajesh Kumar": 4, "Priya Singh": 3}, "10": {"Rajesh Kumar": 6, "Amit Sharma": 5, "Priya Singh": 4}, "11": {"Rajesh Kumar": 8, "Amit Sharma": 7, "Priya Singh": 6, "Neha Patel": 5}, "12": {"Rajesh Kumar": 10, "Amit Sharma": 8, "Priya Singh": 7, "Neha Patel": 8, "Vikram Reddy": 6}, "13": {"Rajesh Kumar": 11, "Amit Sharma": 10, "Priya Singh": 9, "Vikram Reddy": 8, "Neha Patel": 7}, "14": {"Rajesh Kumar": 9, "Amit Sharma": 9, "Priya Singh": 8, "Vikram Reddy": 10, "Neha Patel": 9}, "15": {"Rajesh Kumar": 7, "Amit Sharma": 8, "Neha Patel": 10, "Vikram Reddy": 9, "Priya Singh": 8}, "16": {"Rajesh Kumar": 3, "Amit Sharma": 3, "Vikram Reddy": 3, "Neha Patel": 3, "Priya Singh": 2}}};
+    r1 = {data: demo, dataAll: demoAll, ts: '2026-02-20 10:00'};
+    document.getElementById('r1t').textContent = '10:00';
+    document.getElementById('i1').textContent = '✓ Demo - Upload to start';
+    draw();
+  }
 })();
 </script>
 </body>
