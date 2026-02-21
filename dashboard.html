@@ -1295,6 +1295,26 @@ function draw(){
     html+='</div>';
     html+='<div class="chart-container"><canvas id="hourlyChart"></canvas></div>';
   }
+  if(r1.dataAll){
+  var dAll=r1.dataAll;
+  var dpAll=pct(dAll.delivered,dAll.total);
+  var empsAll=Object.entries(dAll.empMap).sort(function(a,b){return pct(b[1].del,b[1].total)-pct(a[1].del,a[1].total);});
+  html+='<div class="section-header" style="margin-top:44px;"><div><h2>All Shipments (COD + PREPAID)'+hubLabel+'</h2><div class="sh-meta">All payment types combined</div></div></div>';
+  html+='<div class="kpi-grid" style="margin-bottom:24px;">';
+  html+='<div class="kpi-card kc-grn"><div class="kpi-notch"></div><div class="kpi-label">Total Delivered</div><div class="kpi-value">'+dAll.delivered+'</div><div class="kpi-sub">'+f1(dpAll)+'% of '+dAll.total+'</div></div>';
+  html+='<div class="kpi-card kc-blu"><div class="kpi-notch"></div><div class="kpi-label">COD Shipments</div><div class="kpi-value">'+dAll.codCount+'</div><div class="kpi-sub">'+f1(pct(dAll.codCount,dAll.total))+'%</div></div>';
+  html+='<div class="kpi-card kc-pur"><div class="kpi-notch"></div><div class="kpi-label">PREPAID</div><div class="kpi-value">'+dAll.prepaidCount+'</div><div class="kpi-sub">'+f1(pct(dAll.prepaidCount,dAll.total))+'%</div></div>';
+  html+='<div class="kpi-card kc-amb"><div class="kpi-notch"></div><div class="kpi-label">On Road</div><div class="kpi-value">'+dAll.onRoad+'</div><div class="kpi-sub">In field</div></div>';
+  html+='<div class="kpi-card kc-red"><div class="kpi-notch"></div><div class="kpi-label">Undelivered</div><div class="kpi-value">'+dAll.undel+'</div><div class="kpi-sub">UNDEL</div></div>';
+  html+='<div class="kpi-card kc-org"><div class="kpi-notch"></div><div class="kpi-label">Avg Speed</div><div class="kpi-value">'+f2(avgSpeed(dAll.empMap))+'</div><div class="kpi-sub">del/hr</div></div>';
+  html+='</div>';
+  html+='<div class="table-scroll"><div class="table-wrap"><table><thead><tr><th>#</th><th>Name</th><th>Total</th><th>DEL</th><th>Road</th><th>UNDEL</th><th>COD</th><th>PREPAID</th><th>Del%</th><th>Speed/hr</th></tr></thead><tbody>';
+  empsAll.forEach(function(kv,i){
+    var emp=kv[0],e=kv[1],edp=pct(e.del,e.total);
+    html+='<tr><td style="color:var(--faint)">'+(i+1)+'</td><td class="td-name">'+emp+'</td><td class="td-num">'+e.total+'</td><td class="td-num" style="color:var(--green)">'+e.del+'</td><td class="td-num" style="color:var(--amber)">'+e.onRoad+'</td><td class="td-num" style="color:var(--red)">'+e.undel+'</td><td class="td-num" style="color:var(--blue)">'+e.cod+'</td><td class="td-num" style="color:var(--purple)">'+e.prepaid+'</td><td><span class="chip '+pcls(edp)+'">'+f1(edp)+'%</span></td><td style="color:var(--purple);font-weight:700">'+f2(e.speedHr)+'/hr</td></tr>';
+  });
+  html+='</tbody></table></div></div>';
+}
 
   html+='<div class="section-header" style="margin-top:44px;">';
   html+='<div><h2>COD Rider Performance</h2><div class="sh-meta">COD only · Sorted by delivery rate</div></div>';
